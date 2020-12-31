@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Cloud Formation template to deploy your Webflow static website in AWS.
+
+Parameters:
+  BucketName:
+    Type: String
+
+Resources:
+  S3TriggerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  S3TriggerLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: s3_trigger_artifacts-upload
+      Description: Function responsible of uzipping the zip file uploaded and move the files to the correct folder
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Timeout: 300
+      Role: !GetAtt S3TriggerLambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          exports.handler =  async function(event, context) {
+            console.log("EVENT: \n" + JSON.stringify(event, null, 2))
+            return context.logStreamName
+          }
+  S3SourceBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    DependsOn:
+      - S3TriggerLambdaInvokePermission
+    Properties:
+      BucketName: !Ref BucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: artifacts/
+                  - Name: suffix
+                    Value: .zip
+            Function: !GetAtt S3TriggerLambdaFunction.Arn
+  S3TriggerLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt S3TriggerLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub 'arn:aws:s3:::${BucketName}'
