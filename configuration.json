@@ -1,0 +1,6 @@
+{
+  "bucket_name": "test.createin.cloud",
+  "stack_name": "CreateInCloud",
+  "support_bucket_name": "webflow-aws-support",
+  "support_stack_name": "WebflowAWSSupport"
+}
