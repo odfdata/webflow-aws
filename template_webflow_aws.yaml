@@ -31,11 +31,8 @@ Resources:
       Timeout: 300
       Role: !GetAtt S3TriggerLambdaExecutionRole.Arn
       Code:
-        ZipFile: |
-          exports.handler =  async function(event, context) {
-            console.log("EVENT: \n" + JSON.stringify(event, null, 2))
-            return context.logStreamName
-          }
+        S3Bucket: 'webflow-aws-support'
+        S3Key: 'lambda_function/s3_trigger_artifacts_upload/package.zip'
   S3SourceBucket:
     Type: 'AWS::S3::Bucket'
     DeletionPolicy: Retain

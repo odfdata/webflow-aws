@@ -3,7 +3,7 @@ import boto3
 
 if __name__ == '__main__':
 
-    with open('../template.yaml') as f:
+    with open('../template_webflow_aws.yaml') as f:
         template_body = f.read()
     client = boto3.client('cloudformation')
 

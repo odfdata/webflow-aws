@@ -1,7 +1,8 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Cloud Formation template to create all the needed AWS support resources.
 
-S3SourceBucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: 'webflow-aws-support'
+Resources:
+  S3SourceBucket:
+      Type: 'AWS::S3::Bucket'
+      Properties:
+        BucketName: 'webflow-aws-support'
