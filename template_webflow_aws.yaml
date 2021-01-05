@@ -92,6 +92,13 @@ Resources:
       Code:
         S3Bucket: !Ref SupportBucketName
         S3Key: 'lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
+  CloudFrontWWWEditPathForOriginVersion:
+    Type: 'AWS::Lambda::Version'
+    Properties:
+      FunctionName: !Ref CloudFrontWWWEditPathForOrigin
+      Description: Latest version
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 20
   CloudFrontWWWCheckLanguage:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -105,6 +112,13 @@ Resources:
       Code:
         S3Bucket: !Ref SupportBucketName
         S3Key: 'lambda_function/cloudfront_www_check_language/package.zip'
+  CloudFrontWWWCheckLanguageVersion:
+    Type: 'AWS::Lambda::Version'
+    Properties:
+      FunctionName: !Ref CloudFrontWWWCheckLanguage
+      Description: Latest version
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 20
   CloudFrontWWW:
     Type: 'AWS::CloudFront::Distribution'
     Properties:
@@ -112,9 +126,28 @@ Resources:
         Enabled: true
         Comment: CloudFront Distribution for your WWW static website
         Aliases: !Ref CNAMEs
-        HttpVersion:
-          - http1.1
-          - http2
+        HttpVersion: http1.1
         PriceClass: PriceClass_100
         Origins:
-          - S3OriginConfig
+          - S3OriginConfig:
+              OriginAccessIdentity: cloudfron-only-acc-identity
+            DomainName: '${BucketName}.s3.amazonaws.com'
+            OriginPath: /src/prod
+            Id: 'S3-${BucketName}/src/prod'
+        CacheBehaviors:
+          - AllowedMethods:
+            - GET
+            - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            TargetOriginId: 'S3-${BucketName}/src/prod'
+            ViewerProtocolPolicy: redirect-to-https
+            PathPattern: Default (*)
+            LambdaFunctionAssociations:
+              - EventType: origin-request
+                IncludeBody: false
+                LambdaFunctionARN: !Ref CloudFrontWWWEditPathForOriginVersion
+              - EventType: viewer-request
+                IncludeBody: false
+                LambdaFunctionARN: !Ref CloudFrontWWWCheckLanguageVersion

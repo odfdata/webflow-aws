@@ -1,5 +1,6 @@
 {
   "bucket_name": "test.createin.cloud",
+  "CNAMEs": "wwww.test.createin.cloud, test.createin.cloud",
   "stack_name": "CreateInCloudTest",
   "support_bucket_name": "webflow-aws-support",
   "support_stack_name": "WebflowAWSSupport"

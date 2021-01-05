@@ -22,6 +22,10 @@ if __name__ == '__main__':
             {
                 'ParameterKey': 'SupportBucketName',
                 'ParameterValue': configuration['support_bucket_name']
+            },
+            {
+                'ParameterKey': 'CNAMEs',
+                'ParameterValue': configuration['CNAMEs']
             }
         ]
 
