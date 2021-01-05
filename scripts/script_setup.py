@@ -10,7 +10,7 @@ if __name__ == '__main__':
         configuration = json.load(f)
     with open('../template_setup.yaml') as f:
         template_setup = f.read()
-
+    """
     response = cloudformation_client.create_stack(
         StackName=configuration['support_stack_name'],
         TemplateBody=template_setup,
@@ -33,6 +33,18 @@ if __name__ == '__main__':
         elif response['Stacks'][0]['StackStatus'] in ['CREATE_COMPLETE']:
             break
     print('Stack successfully created')
+    """
+
+    s3_resource.meta.client.upload_file(
+        Bucket=configuration['support_bucket_name'],
+        Filename='../lambda_function/cloudfront_www_check_language/cloudfront_www_check_language.zip',
+        Key='lambda_function/cloudfront_www_check_language/package.zip'
+    )
+    s3_resource.meta.client.upload_file(
+        Bucket=configuration['support_bucket_name'],
+        Filename='../lambda_function/cloudfront_www_edit_path_for_origin/cloudfront_www_edit_path_for_origin.zip',
+        Key='lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
+    )
     s3_resource.meta.client.upload_file(
         Bucket=configuration['support_bucket_name'],
         Filename='../lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip',

@@ -87,25 +87,18 @@ Resources:
       MemorySize: 128
       Role: !GetAtt CloudFrontLambdaExecutionRole.Arn
       Code:
-        ZipFile: |
-          var path = require('path');
-
-          exports.handler = async (event) => {
-
-              let uri = event.Records[0].cf.request.uri;
-              let uriParts = uri.split("/");
-
-              let index_uriPartsLastItem = uriParts.length - 1;
-              let uriFileName = uriParts[index_uriPartsLastItem];
-
-              if (uriFileName==="") uriParts[index_uriPartsLastItem] = "index.html";
-              else {
-                  let ext = path.extname(uriParts[index_uriPartsLastItem]);
-                  if (ext === "") uriParts[index_uriPartsLastItem] = uriParts[index_uriPartsLastItem] + ".html";
-              }
-
-              uri = uriParts.join("/");
-              event.Records[0].cf.request.uri = uri;
-
-              return event.Records[0].cf.request;
-          };
+        S3Bucket: !Ref SupportBucketName
+        S3Key: 'lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
+  CloudFrontWWWCheckLanguage:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: CloudFront_WWW_checkLanguageTest
+      Description: if there is no language in the URL path, adds it and redirect the user
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Timeout: 300
+      MemorySize: 128
+      Role: !GetAtt CloudFrontLambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref SupportBucketName
+        S3Key: 'lambda_function/cloudfront_www_check_language/package.zip'
