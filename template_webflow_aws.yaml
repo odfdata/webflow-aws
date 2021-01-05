@@ -5,7 +5,7 @@ Parameters:
   BucketName:
     Type: String
   SupportBucketName:
-    Type: string
+    Type: String
 
 Resources:
   S3TriggerLambdaExecutionRole:
@@ -61,3 +61,51 @@ Resources:
       Principal: s3.amazonaws.com
       SourceAccount: !Ref 'AWS::AccountId'
       SourceArn: !Sub 'arn:aws:s3:::${BucketName}'
+  CloudFrontLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  CloudFrontWWWEditPathForOrigin:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: CloudFront_WWW_editPathForOriginTest
+      Description: Appends .html extension to universal paths, preserving files with other extensions (ex .css)
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Timeout: 300
+      MemorySize: 128
+      Role: !GetAtt CloudFrontLambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          var path = require('path');
+
+          exports.handler = async (event) => {
+
+              let uri = event.Records[0].cf.request.uri;
+              let uriParts = uri.split("/");
+
+              let index_uriPartsLastItem = uriParts.length - 1;
+              let uriFileName = uriParts[index_uriPartsLastItem];
+
+              if (uriFileName==="") uriParts[index_uriPartsLastItem] = "index.html";
+              else {
+                  let ext = path.extname(uriParts[index_uriPartsLastItem]);
+                  if (ext === "") uriParts[index_uriPartsLastItem] = uriParts[index_uriPartsLastItem] + ".html";
+              }
+
+              uri = uriParts.join("/");
+              event.Records[0].cf.request.uri = uri;
+
+              return event.Records[0].cf.request;
+          };
