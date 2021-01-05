@@ -6,6 +6,9 @@ Parameters:
     Type: String
   SupportBucketName:
     Type: String
+  CNAMEs:
+    Description: The list of supported websites.
+    Type: CommaDelimitedList
 
 Resources:
   S3TriggerLambdaExecutionRole:
@@ -102,3 +105,16 @@ Resources:
       Code:
         S3Bucket: !Ref SupportBucketName
         S3Key: 'lambda_function/cloudfront_www_check_language/package.zip'
+  CloudFrontWWW:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: CloudFront Distribution for your WWW static website
+        Aliases: !Ref CNAMEs
+        HttpVersion:
+          - http1.1
+          - http2
+        PriceClass: PriceClass_100
+        Origins:
+          - S3OriginConfig
