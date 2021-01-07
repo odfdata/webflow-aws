@@ -74,6 +74,7 @@ Resources:
             Principal:
               Service:
                 - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
             Action:
               - sts:AssumeRole
       Path: "/"
@@ -86,7 +87,7 @@ Resources:
       Description: Appends .html extension to universal paths, preserving files with other extensions (ex .css)
       Handler: index.handler
       Runtime: nodejs12.x
-      Timeout: 300
+      Timeout: 5
       MemorySize: 128
       Role: !GetAtt CloudFrontLambdaExecutionRole.Arn
       Code:
@@ -106,7 +107,7 @@ Resources:
       Description: if there is no language in the URL path, adds it and redirect the user
       Handler: index.handler
       Runtime: nodejs12.x
-      Timeout: 300
+      Timeout: 5
       MemorySize: 128
       Role: !GetAtt CloudFrontLambdaExecutionRole.Arn
       Code:
@@ -119,6 +120,28 @@ Resources:
       Description: Latest version
       ProvisionedConcurrencyConfig:
         ProvisionedConcurrentExecutions: 20
+  CloudFrontCachePolicy:
+    Type: 'AWS::CloudFront::CachePolicy'
+    Properties:
+      CachePolicyConfig:
+        Comment: 'The CloudFront cache policy used by the DefaultCacheBehavior'
+        DefaultTTL: 86400
+        MaxTTL: 31536000
+        MinTTL: 0
+        Name: CloudFrontWWWCachePolicy
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+  CloudFrontOriginAccessIdentity:
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: 'cloudfront-only-acc-identity'
   CloudFrontWWW:
     Type: 'AWS::CloudFront::Distribution'
     Properties:
@@ -130,24 +153,27 @@ Resources:
         PriceClass: PriceClass_100
         Origins:
           - S3OriginConfig:
-              OriginAccessIdentity: cloudfron-only-acc-identity
-            DomainName: '${BucketName}.s3.amazonaws.com'
+              OriginAccessIdentity: !Join
+                - ''
+                - - 'origin-access-identity/cloudfront/'
+                  - !Ref CloudFrontOriginAccessIdentity
+            DomainName: 'test.createin.cloud.s3.amazonaws.com'
             OriginPath: /src/prod
             Id: 'S3-${BucketName}/src/prod'
-        CacheBehaviors:
-          - AllowedMethods:
+        DefaultCacheBehavior:
+          AllowedMethods:
             - GET
             - HEAD
-            CachedMethods:
-              - GET
-              - HEAD
-            TargetOriginId: 'S3-${BucketName}/src/prod'
-            ViewerProtocolPolicy: redirect-to-https
-            PathPattern: Default (*)
-            LambdaFunctionAssociations:
-              - EventType: origin-request
-                IncludeBody: false
-                LambdaFunctionARN: !Ref CloudFrontWWWEditPathForOriginVersion
-              - EventType: viewer-request
-                IncludeBody: false
-                LambdaFunctionARN: !Ref CloudFrontWWWCheckLanguageVersion
+          CachedMethods:
+            - GET
+            - HEAD
+          CachePolicyId: !Ref CloudFrontCachePolicy
+          TargetOriginId: 'S3-${BucketName}/src/prod'
+          ViewerProtocolPolicy: redirect-to-https
+          LambdaFunctionAssociations:
+            - EventType: origin-request
+              IncludeBody: false
+              LambdaFunctionARN: !Ref CloudFrontWWWEditPathForOriginVersion
+            - EventType: viewer-request
+              IncludeBody: false
+              LambdaFunctionARN: !Ref CloudFrontWWWCheckLanguageVersion
