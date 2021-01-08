@@ -100,8 +100,6 @@ Resources:
     Properties:
       FunctionName: !Ref CloudFrontWWWEditPathForOrigin
       Description: Latest version
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 20
   CloudFrontWWWCheckLanguage:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -120,8 +118,6 @@ Resources:
     Properties:
       FunctionName: !Ref CloudFrontWWWCheckLanguage
       Description: Latest version
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 20
   CloudFrontCachePolicy:
     Type: 'AWS::CloudFront::CachePolicy'
     Properties:
@@ -173,7 +169,11 @@ Resources:
                   - !Ref CloudFrontOriginAccessIdentity
             DomainName: 'test.createin.cloud.s3.amazonaws.com'
             OriginPath: /src/prod
-            Id: 'S3-${BucketName}/src/prod'
+            Id: !Join
+              - ''
+              - - 'S3-'
+                - !Ref BucketName
+                - '/src/prod'
         DefaultCacheBehavior:
           AllowedMethods:
             - GET
@@ -182,7 +182,11 @@ Resources:
             - GET
             - HEAD
           CachePolicyId: !Ref CloudFrontCachePolicy
-          TargetOriginId: 'S3-${BucketName}/src/prod'
+          TargetOriginId: !Join
+            - ''
+            - - 'S3-'
+              - !Ref BucketName
+              - '/src/prod'
           ViewerProtocolPolicy: redirect-to-https
           LambdaFunctionAssociations:
             - EventType: origin-request
