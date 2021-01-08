@@ -167,7 +167,10 @@ Resources:
                 - ''
                 - - 'origin-access-identity/cloudfront/'
                   - !Ref CloudFrontOriginAccessIdentity
-            DomainName: 'test.createin.cloud.s3.amazonaws.com'
+            DomainName: !Join
+              - ''
+              - - !Ref BucketName
+                - '.cloud.s3.amazonaws.com'
             OriginPath: /src/prod
             Id: !Join
               - ''
