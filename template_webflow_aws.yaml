@@ -6,6 +6,8 @@ Parameters:
     Type: String
   SupportBucketName:
     Type: String
+  Route53HostedZoneName:
+    Type: String
   CNAMEs:
     Description: The list of supported websites.
     Type: CommaDelimitedList
@@ -142,6 +144,18 @@ Resources:
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: 'cloudfront-only-acc-identity'
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-certificatemanager-certificate.html
+  SSLCertificate:
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: test.createin.cloud
+      DomainValidationOptions:
+        - DomainName: test.createin.cloud
+          HostedZoneId: !Ref Route53HostedZoneName
+      ValidationMethod: DNS
+      SubjectAlternativeNames:
+        - test.createin.cloud
+        - '*.test.createin.cloud'
   CloudFrontWWW:
     Type: 'AWS::CloudFront::Distribution'
     Properties:
@@ -177,3 +191,7 @@ Resources:
             - EventType: viewer-request
               IncludeBody: false
               LambdaFunctionARN: !Ref CloudFrontWWWCheckLanguageVersion
+        ViewerCertificate:
+          AcmCertificateArn: !Ref SSLCertificate
+          MinimumProtocolVersion: TLSv1.2_2019
+          SslSupportMethod: sni-only
