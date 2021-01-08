@@ -58,6 +58,14 @@ Resources:
                   - Name: suffix
                     Value: .zip
             Function: !GetAtt S3TriggerLambdaFunction.Arn
+  # S3SourceBucketPolicy:
+  #   Type: 'AWS::S3::BucketPolicy'
+  #   Properties:
+  #     Bucket: !Ref BucketName
+  #     PolicyDocument:
+  #       Statement:
+  #          - Action: 's3:GetObject'
+  #           Resource: !
   S3TriggerLambdaInvokePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
