@@ -18,10 +18,11 @@ exports.handler = async (event) => {
   let srcBucket = event.Records[0].s3.bucket.name;
   let srcKey    = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));
   let dstBucket = event.Records[0].s3.bucket.name;
+  let cloudfrontDistributionId = process.env.CDN_DISTRIBUTION_ID;
   console.log(srcBucket);
   console.log(srcKey);
   //alpha o prod?
-  let stage = srcKey.split("/")[1] === PRODUCTION ? PRODUCTION : ALPHA;
+  let stage = srcKey.split("/")[1] === 'prod' ? 'prod' : 'alpha';
   let dstFolder = "src/"+stage+"/";
 
   // prendo il file
@@ -53,11 +54,9 @@ exports.handler = async (event) => {
     }).promise());
   }
   await Promise.all(promiseUploads);
-  console.log(stage);
-  console.log(getDistributionId(stage, srcBucket));
   // invalidate CDN
   await cf.createInvalidation({
-    DistributionId: getDistributionId(stage, srcBucket),
+    DistributionId: cloudfrontDistributionId,
     InvalidationBatch: {
       CallerReference: Date.now()+"",
       Paths: {

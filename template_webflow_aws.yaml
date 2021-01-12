@@ -26,8 +26,39 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: "/"
+      RoleName: 'S3TriggerLambdaExecutionRole'
+      Description: 'Execution role that allows the lambda function to get the uploaded zip from S3, upload it the unpacked one and invalidate the CDN'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: s3_trigger_artifacts-upload-role
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:ListObject'
+                  - 's3:DeleteObject'
+                  - 's3:HeadBucket'
+                  - 'cloudfront:CreateInvalidation'
+                Resource:
+                  - !Join
+                    - ''
+                    - - 'arn:aws:cloudfront::'
+                      - !Ref 'AWS::AccountId'
+                      - ':distribution/'
+                      - !Ref CloudFrontWWW
+                  - !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref BucketName
+                  - !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref BucketName
+                      - '/*'
   S3TriggerLambdaFunction:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -39,7 +70,10 @@ Resources:
       Role: !GetAtt S3TriggerLambdaExecutionRole.Arn
       Code:
         S3Bucket: !Ref SupportBucketName
-        S3Key: 'lambda_function/s3_trigger_artifacts_upload/package.zip'
+        S3Key: 'lambda_function/s3_trigger_artifacts_upload/package1.zip'
+      Environment:
+        Variables:
+          CDN_DISTRIBUTION_ID: !Ref CloudFrontWWW
   S3SourceBucket:
     Type: 'AWS::S3::Bucket'
     DeletionPolicy: Retain
@@ -58,14 +92,6 @@ Resources:
                   - Name: suffix
                     Value: .zip
             Function: !GetAtt S3TriggerLambdaFunction.Arn
-  # S3SourceBucketPolicy:
-  #   Type: 'AWS::S3::BucketPolicy'
-  #   Properties:
-  #     Bucket: !Ref BucketName
-  #     PolicyDocument:
-  #       Statement:
-  #          - Action: 's3:GetObject'
-  #           Resource: !
   S3TriggerLambdaInvokePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -148,6 +174,24 @@ Resources:
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: 'cloudfront-only-acc-identity'
+  S3SourceBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref BucketName
+      PolicyDocument:
+        Statement:
+          - Action: 's3:GetObject'
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref BucketName
+                - '/*'
+            Effect: 'Allow'
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity '
+                  - !Ref CloudFrontOriginAccessIdentity
   # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-certificatemanager-certificate.html
   SSLCertificate:
     Type: 'AWS::CertificateManager::Certificate'

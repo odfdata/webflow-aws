@@ -13,7 +13,7 @@ if __name__ == '__main__':
         StackName=configuration['stack_name'],
         TemplateBody=template_body,
         UsePreviousTemplate=False,
-        Capabilities=['CAPABILITY_IAM'],
+        Capabilities=['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM'],
         Parameters=[
             {
                 'ParameterKey': 'BucketName',
