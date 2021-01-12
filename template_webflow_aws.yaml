@@ -92,6 +92,11 @@ Resources:
                   - Name: suffix
                     Value: .zip
             Function: !GetAtt S3TriggerLambdaFunction.Arn
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
   S3TriggerLambdaInvokePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -157,9 +162,9 @@ Resources:
     Properties:
       CachePolicyConfig:
         Comment: 'The CloudFront cache policy used by the DefaultCacheBehavior'
-        DefaultTTL: 86400
-        MaxTTL: 31536000
-        MinTTL: 0
+        DefaultTTL: 1
+        MaxTTL: 1
+        MinTTL: 1
         Name: CloudFrontWWWCachePolicy
         ParametersInCacheKeyAndForwardedToOrigin:
           CookiesConfig:
@@ -187,6 +192,7 @@ Resources:
                 - !Ref BucketName
                 - '/*'
             Effect: 'Allow'
+            Sid: '1'
             Principal:
               AWS: !Join
                 - ''
@@ -211,7 +217,7 @@ Resources:
         Enabled: true
         Comment: CloudFront Distribution for your WWW static website
         Aliases: !Ref CNAMEs
-        HttpVersion: http1.1
+        HttpVersion: http2
         PriceClass: PriceClass_100
         Origins:
           - S3OriginConfig:
@@ -254,3 +260,21 @@ Resources:
           AcmCertificateArn: !Ref SSLCertificate
           MinimumProtocolVersion: TLSv1.2_2019
           SslSupportMethod: sni-only
+  # Route53RecordWWWTestCreateinCloud:
+  #   Type: 'AWS::Route53::RecordSet'
+  Route53RecordGroup:
+    Type: 'AWS::Route53::RecordSetGroup'
+    Properties:
+      Comment: Route 53 record group
+      HostedZoneId: Z05220491VYWKK8DIAQM
+      RecordSets:
+        - AliasTarget:
+            DNSName: !GetAtt CloudFrontWWW.DomainName
+            HostedZoneId: Z2FDTNDATAQYW2
+          Name: www.test.createin.cloud
+          Type: A
+        - AliasTarget:
+            DNSName: !GetAtt CloudFrontWWW.DomainName
+            HostedZoneId: Z2FDTNDATAQYW2
+          Name: test.createin.cloud
+          Type: A
