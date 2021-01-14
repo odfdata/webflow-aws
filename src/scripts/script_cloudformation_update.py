@@ -25,7 +25,7 @@ if __name__ == '__main__':
             },
             {
                 'ParameterKey': 'CNAMEs',
-                'ParameterValue': configuration['CNAMEs']
+                'ParameterValue': ','.join(configuration['CNAMEs'])
             },
             {
                 'ParameterKey': 'Route53HostedZoneName',
