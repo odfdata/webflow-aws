@@ -6,9 +6,9 @@ import boto3
 if __name__ == '__main__':
     cloudformation_client = boto3.client('cloudformation')
     s3_resource = boto3.resource('s3')
-    with open('../configuration.json') as f:
+    with open('../../configuration.json') as f:
         configuration = json.load(f)
-    with open('../template_setup.yaml') as f:
+    with open('../../template_setup.yaml') as f:
         template_setup = f.read()
     """
     response = cloudformation_client.create_stack(
