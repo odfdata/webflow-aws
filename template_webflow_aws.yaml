@@ -1,0 +1,280 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Cloud Formation template to deploy your Webflow static website in AWS.
+
+Parameters:
+  BucketName:
+    Type: String
+  SupportBucketName:
+    Type: String
+  Route53HostedZoneName:
+    Type: String
+  CNAMEs:
+    Description: The list of supported websites.
+    Type: CommaDelimitedList
+
+Resources:
+  S3TriggerLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      RoleName: 'S3TriggerLambdaExecutionRole'
+      Description: 'Execution role that allows the lambda function to get the uploaded zip from S3, upload it the unpacked one and invalidate the CDN'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: s3_trigger_artifacts-upload-role
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                  - 's3:GetObject'
+                  - 's3:ListObject'
+                  - 's3:DeleteObject'
+                  - 's3:HeadBucket'
+                  - 'cloudfront:CreateInvalidation'
+                Resource:
+                  - !Join
+                    - ''
+                    - - 'arn:aws:cloudfront::'
+                      - !Ref 'AWS::AccountId'
+                      - ':distribution/'
+                      - !Ref CloudFrontWWW
+                  - !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref BucketName
+                  - !Join
+                    - ''
+                    - - 'arn:aws:s3:::'
+                      - !Ref BucketName
+                      - '/*'
+  S3TriggerLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: s3_trigger_artifacts-upload
+      Description: Function responsible of uzipping the zip file uploaded and move the files to the correct folder
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Timeout: 300
+      Role: !GetAtt S3TriggerLambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref SupportBucketName
+        S3Key: 'lambda_function/s3_trigger_artifacts_upload/package1.zip'
+      Environment:
+        Variables:
+          CDN_DISTRIBUTION_ID: !Ref CloudFrontWWW
+  S3SourceBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    DependsOn:
+      - S3TriggerLambdaInvokePermission
+    Properties:
+      BucketName: !Ref BucketName
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: artifacts/
+                  - Name: suffix
+                    Value: .zip
+            Function: !GetAtt S3TriggerLambdaFunction.Arn
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  S3TriggerLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt S3TriggerLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub 'arn:aws:s3:::${BucketName}'
+  CloudFrontLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  CloudFrontWWWEditPathForOrigin:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: CloudFront_WWW_editPathForOriginTest
+      Description: Appends .html extension to universal paths, preserving files with other extensions (ex .css)
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Timeout: 5
+      MemorySize: 128
+      Role: !GetAtt CloudFrontLambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref SupportBucketName
+        S3Key: 'lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
+  CloudFrontWWWEditPathForOriginVersion:
+    Type: 'AWS::Lambda::Version'
+    Properties:
+      FunctionName: !Ref CloudFrontWWWEditPathForOrigin
+      Description: Latest version
+  CloudFrontWWWCheckLanguage:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: CloudFront_WWW_checkLanguageTest
+      Description: if there is no language in the URL path, adds it and redirect the user
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Timeout: 5
+      MemorySize: 128
+      Role: !GetAtt CloudFrontLambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref SupportBucketName
+        S3Key: 'lambda_function/cloudfront_www_check_language/package.zip'
+  CloudFrontWWWCheckLanguageVersion:
+    Type: 'AWS::Lambda::Version'
+    Properties:
+      FunctionName: !Ref CloudFrontWWWCheckLanguage
+      Description: Latest version
+  CloudFrontCachePolicy:
+    Type: 'AWS::CloudFront::CachePolicy'
+    Properties:
+      CachePolicyConfig:
+        Comment: 'The CloudFront cache policy used by the DefaultCacheBehavior'
+        DefaultTTL: 1
+        MaxTTL: 1
+        MinTTL: 1
+        Name: CloudFrontWWWCachePolicy
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+  CloudFrontOriginAccessIdentity:
+    Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: 'cloudfront-only-acc-identity'
+  S3SourceBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref BucketName
+      PolicyDocument:
+        Statement:
+          - Action: 's3:GetObject'
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref BucketName
+                - '/*'
+            Effect: 'Allow'
+            Sid: '1'
+            Principal:
+              AWS: !Join
+                - ''
+                - - 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity '
+                  - !Ref CloudFrontOriginAccessIdentity
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-certificatemanager-certificate.html
+  SSLCertificate:
+    Type: 'AWS::CertificateManager::Certificate'
+    Properties:
+      DomainName: test.createin.cloud
+      DomainValidationOptions:
+        - DomainName: test.createin.cloud
+          HostedZoneId: !Ref Route53HostedZoneName
+      ValidationMethod: DNS
+      SubjectAlternativeNames:
+        - test.createin.cloud
+        - '*.test.createin.cloud'
+  CloudFrontWWW:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: CloudFront Distribution for your WWW static website
+        Aliases: !Ref CNAMEs
+        HttpVersion: http2
+        PriceClass: PriceClass_100
+        Origins:
+          - S3OriginConfig:
+              OriginAccessIdentity: !Join
+                - ''
+                - - 'origin-access-identity/cloudfront/'
+                  - !Ref CloudFrontOriginAccessIdentity
+            DomainName: !Join
+              - ''
+              - - !Ref BucketName
+                - '.s3.amazonaws.com'
+            OriginPath: /src/prod
+            Id: !Join
+              - ''
+              - - 'S3-'
+                - !Ref BucketName
+                - '/src/prod'
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          CachePolicyId: !Ref CloudFrontCachePolicy
+          TargetOriginId: !Join
+            - ''
+            - - 'S3-'
+              - !Ref BucketName
+              - '/src/prod'
+          ViewerProtocolPolicy: redirect-to-https
+          LambdaFunctionAssociations:
+            - EventType: origin-request
+              IncludeBody: false
+              LambdaFunctionARN: !Ref CloudFrontWWWEditPathForOriginVersion
+            - EventType: viewer-request
+              IncludeBody: false
+              LambdaFunctionARN: !Ref CloudFrontWWWCheckLanguageVersion
+        ViewerCertificate:
+          AcmCertificateArn: !Ref SSLCertificate
+          MinimumProtocolVersion: TLSv1.2_2019
+          SslSupportMethod: sni-only
+  # Route53RecordWWWTestCreateinCloud:
+  #   Type: 'AWS::Route53::RecordSet'
+  Route53RecordGroup:
+    Type: 'AWS::Route53::RecordSetGroup'
+    Properties:
+      Comment: Route 53 record group
+      HostedZoneId: Z05220491VYWKK8DIAQM
+      RecordSets:
+        - AliasTarget:
+            DNSName: !GetAtt CloudFrontWWW.DomainName
+            HostedZoneId: Z2FDTNDATAQYW2
+          Name: www.test.createin.cloud
+          Type: A
+        - AliasTarget:
+            DNSName: !GetAtt CloudFrontWWW.DomainName
+            HostedZoneId: Z2FDTNDATAQYW2
+          Name: test.createin.cloud
+          Type: A
