@@ -1,10 +1,9 @@
-import json
-
 import boto3
+import yaml
 
 if __name__ == '__main__':
-    with open('../../configuration.json') as f:
-        configuration = json.load(f)
+    with open('../../configuration.yaml') as f:
+        configuration = yaml.load(f, Loader=yaml.SafeLoader)
     with open('../../template_webflow_aws.yaml') as f:
         template_body = f.read()
     client = boto3.client('cloudformation')

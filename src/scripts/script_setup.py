@@ -1,16 +1,15 @@
-import json
 from time import sleep
 
 import boto3
+import yaml
 
 if __name__ == '__main__':
     cloudformation_client = boto3.client('cloudformation')
     s3_resource = boto3.resource('s3')
-    with open('../../configuration.json') as f:
-        configuration = json.load(f)
+    with open('../../configuration.yaml') as f:
+        configuration = yaml.load(f, Loader=yaml.SafeLoader)
     with open('../../template_setup.yaml') as f:
         template_setup = f.read()
-    """
     response = cloudformation_client.create_stack(
         StackName=configuration['support_stack_name'],
         TemplateBody=template_setup,
@@ -33,7 +32,6 @@ if __name__ == '__main__':
         elif response['Stacks'][0]['StackStatus'] in ['CREATE_COMPLETE']:
             break
     print('Stack successfully created')
-    """
 
     s3_resource.meta.client.upload_file(
         Bucket=configuration['support_bucket_name'],
