@@ -228,7 +228,7 @@ Resources:
             DomainName: !Join
               - ''
               - - !Ref BucketName
-                - '.cloud.s3.amazonaws.com'
+                - '.s3.amazonaws.com'
             OriginPath: /src/prod
             Id: !Join
               - ''
