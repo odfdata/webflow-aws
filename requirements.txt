@@ -1,3 +1,11 @@
 boto3~=1.16.46
 pyyaml~=5.3.1
 cfn-flip
+aws-cdk.core
+aws-cdk.aws-certificatemanager
+aws-cdk.aws-cloudfront
+aws-cdk.aws-s3
+aws-cdk.aws-s3-notifications
+aws-cdk.aws-lambda
+aws-cdk.aws-iam
+aws-cdk.aws-cloudfront-origins

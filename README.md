@@ -2,26 +2,57 @@
 Python code to deploy your [Webflow](https://webflow.com/) static website in AWS using Cloud Formation.
 In this version, everything needs to be hosted in AWS, also your domain.
 
-You can find two different templates:
+## Prerequisites
 
-- **template_setup.yaml**: creates all the required support resources used by template_webflow_aws.yaml (like the S3 bucket in which you can find the AWS Lambda function codes).
-- **template_webflow_aws.yaml**: creates all the required resources to publish your website on Internet. 
+In order to use this tool, you have to install:
+- [NodeJS](https://nodejs.org/en/download/) 10.3.0 or later.
+- Python 3.6 or later
+- AWS CLI and configure it.
 
-## Template setup
-The template will create the following resources:
+After you installed them, you have to install the AWS CDK tool.
 
-- **AWS S3 Source Bucket**: the bucket which the AWS Lambda functions codes will be uploaded in. 
+```bash
+npm install -g aws-cdk
+```
 
-## Template Webflow AWS
-The template will create the following resources:
+Finally, you're ready to use our tool.
 
-* **AWS S3 Source Bucket**: the bucket which you'll upload your Webflow zip file in.
-* **AWS Lambda Functions**:
-    * S3 Trigger: function called each time new Webflow zip files are uploaded to the AWS S3 Source bucket. It unzips the file uploaded and move the files to the correct folder.
-    * Edit path for origin: appends .html extension to universal paths, preserving files with other extensions (ex .css)
-    * Check language: function that checks if the language has been set in the path request
-* **AWS Certificate**: certificate SSL/TLS for your custom domain
-* **AWS CloudFront Distribution**: distribution that points to the AWS S3 source bucket configured
-* **AWS Route 53 record**: record of type A to point your domain to the Cloud Front Distribution
+## Available commands
 
-Obviously, it will create all the required IAM roles and policies to allow the resources to be triggered.
+You are ready to use the following commands.
+
+- ```bash
+  webflow-aws setup
+  ```
+  
+  This command will create the Cloud Formation stack containing the support resources.
+
+  After that command, you can execute
+
+  ```bash
+  cdk deploy
+  ```
+
+  To create the other Cloud Formation stack to prepare all the needed resources to expose your static
+  WWW website created with Webflow.
+  
+- ```bash
+  webflow-aws publish
+  ```
+  
+  This command will upload the **.zip** file inside the **websites/** folder to the correct S3 Bucket,
+  unzip the content of it and make it public available under the specified **domains**
+  
+## Next releases
+
+- ```bash
+  webflow-aws create-config
+  ```
+  
+  This command will guide you through the creation of the configuration file and all the customizable parameters.
+
+- ```bash
+  webflow-aws setup
+  ```
+  
+  There will be an update to this command, and it will integrate the **cdk deploy** command inside it.
