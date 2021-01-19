@@ -1,11 +1,8 @@
+import glob
 from time import sleep
 
 import boto3
 import click
-import os
-import glob
-
-import yaml
 
 from src.utils import configuration_yaml_exists, websites_folder_exists, get_configuration
 
@@ -21,7 +18,7 @@ def cli():
 
 @cli.command(short_help='Create the configuration.yaml file')
 def create_config():
-    click.echo('Feature release')
+    click.echo('Future release')
 
 
 @cli.command(short_help="Publish your website in production")
