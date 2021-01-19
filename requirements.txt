@@ -9,3 +9,5 @@ aws-cdk.aws-s3-notifications
 aws-cdk.aws-lambda
 aws-cdk.aws-iam
 aws-cdk.aws-cloudfront-origins
+aws-cdk.aws-route53
+aws-cdk.aws-route53-targets
