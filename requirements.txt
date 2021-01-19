@@ -11,3 +11,4 @@ aws-cdk.aws-iam
 aws-cdk.aws-cloudfront-origins
 aws-cdk.aws-route53
 aws-cdk.aws-route53-targets
+Click~=7.1.2

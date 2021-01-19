@@ -1,5 +1,3 @@
-import random
-import string
 from typing import Optional, List
 
 from aws_cdk import (
@@ -12,19 +10,19 @@ from aws_cdk import (
     aws_cloudfront_origins,
     aws_certificatemanager, aws_route53, aws_route53_targets
 )
-from aws_cdk.aws_certificatemanager import ValidationMethod, CertificateValidation
+from aws_cdk.aws_certificatemanager import CertificateValidation
 from aws_cdk.aws_cloudfront import BehaviorOptions, AllowedMethods, CachedMethods, ViewerProtocolPolicy, EdgeLambda, \
-    LambdaEdgeEventType, HttpVersion, PriceClass, ErrorResponse, S3OriginConfig, IOrigin
-from aws_cdk.aws_iam import ServicePrincipal, ManagedPolicy, PolicyDocument, PolicyStatement, Effect, IPrincipal
+    LambdaEdgeEventType, HttpVersion, PriceClass, ErrorResponse
+from aws_cdk.aws_iam import ServicePrincipal, ManagedPolicy, PolicyDocument, PolicyStatement, Effect
 from aws_cdk.aws_lambda import Code
 from aws_cdk.aws_route53 import HostedZone
-from aws_cdk.aws_s3 import Bucket, EventType, IBucketNotificationDestination, NotificationKeyFilter, BlockPublicAccess
-from aws_cdk.core import Fn, CfnParameter, CfnInclude, Duration
+from aws_cdk.aws_s3 import Bucket, EventType, NotificationKeyFilter, BlockPublicAccess
+from aws_cdk.core import Fn, Duration
 
 
 class WebflowAWSStack(core.Stack):
 
-    def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
+    def __init__(self, scope: core.Construct, id: str, configuration: dict, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
         cloud_front_lambda_execution_role = self.__create_cloud_front_lambda_execution_role()
         cloud_front_www_edit_path_for_origin_lambda = self.__create_cloud_front_www_edit_path_for_origin_lambda(
@@ -35,26 +33,26 @@ class WebflowAWSStack(core.Stack):
         cloud_front_origin_access_identity = self.__create_cloud_front_origin_access_identity()
         cloud_front_cache_policy = self.__create_cloud_front_cache_policy()
         ssl_certificate = self.__create_ssl_certificate(
-            route_53_hosted_zone='Z05220491VYWKK8DIAQM', domain_name='test.createin.cloud',
-            alternative_domain_names=['test.createin.cloud', 'wwww.test.createin.cloud'])
+            route_53_hosted_zone=configuration['route_53_hosted_zone_name'], domain_name=configuration['domain_name'],
+            alternative_domain_names=configuration['CNAMEs'])
         cloud_front_www = self.__create_cloud_front_www(
-            origin_bucket_name='test.createin.cloud', cache_policy=cloud_front_cache_policy,
+            origin_bucket_name=configuration['bucket_name'], cache_policy=cloud_front_cache_policy,
             origin_access_identity=cloud_front_origin_access_identity, ssl_certificate=ssl_certificate,
-            domain_names=['test.createin.cloud', 'wwww.test.createin.cloud'],
+            domain_names=configuration['CNAMEs'],
             edge_lambda_viewer_request=cloud_front_www_edit_path_for_origin_lambda_version)
         s3_trigger_lambda_execution_role = self.__create_s3_trigger_lambda_execution_role(
-            bucket_name='test.createin.cloud', cloudfront_distribution=cloud_front_www)
+            bucket_name=configuration['bucket_name'], cloudfront_distribution=cloud_front_www)
         s3_trigger_lambda_function = self.__create_s3_trigger_lambda_function(
             execution_role=s3_trigger_lambda_execution_role, cloud_front_distribution=cloud_front_www)
         s3_source_bucket = self.__create_s3_source_bucket(
-            bucket_name='test.createin.cloud', s3_trigger_lambda_function=s3_trigger_lambda_function)
+            bucket_name=configuration['bucket_name'], s3_trigger_lambda_function=s3_trigger_lambda_function)
         self.__create_s3_trigger_lambda_invoke_permission(
-            bucket_name='test.createin.cloud', s3_trigger_lambda_function=s3_trigger_lambda_function)
+            bucket_name=configuration['bucket_name'], s3_trigger_lambda_function=s3_trigger_lambda_function)
         self.__create_s3_source_bucket_policy(
             s3_source_bucket=s3_source_bucket, cloud_front_origin_access_identity=cloud_front_origin_access_identity)
         self.__create_route_53_record_group(
-            hosted_zone_id='Z05220491VYWKK8DIAQM',
-            domain_names=['test.createin.cloud', 'wwww.test.createin.cloud'], cloud_front_distribution=cloud_front_www)
+            hosted_zone_id=configuration['route_53_hosted_zone_name'],
+            domain_names=configuration['CNAMEs'], cloud_front_distribution=cloud_front_www)
 
     def __create_cloud_front_cache_policy(self) -> aws_cloudfront.CachePolicy:
         return aws_cloudfront.CachePolicy(

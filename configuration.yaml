@@ -1,4 +1,5 @@
 bucket_name: "test.createin.cloud"
+domain_name: "test.createin.cloud"
 CNAMEs:
   - "test.createin.cloud"
   - "www.test.createin.cloud"
