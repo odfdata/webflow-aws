@@ -1,3 +1,5 @@
+from time import sleep
+
 import boto3
 import click
 import os
@@ -53,8 +55,48 @@ def setup():
     if not configuration_yaml_exists():
         click.echo(
             'The configuration.yaml file doesn\'t exist. Read the README.md file to see how to create it', err=True)
+    cloudformation_client = boto3.client('cloudformation')
     configuration = get_configuration()
     click.echo('Going to create all the needed resources.')
     # check if the support stack is already created
-
+    response = cloudformation_client.describe_stacks()
+    already_created_stack = [
+        stack_info for stack_info in response.get('Stacks', [])
+        if stack_info.get('StackName', '') == configuration['support_stack_name']]
+    if not already_created_stack:
+        # create the support stack and wait for the creation complete
+        with open('./templates/template_setup.yaml') as f:
+            template_setup = f.read()
+        response = cloudformation_client.create_stack(
+            StackName=configuration['support_stack_name'],
+            TemplateBody=template_setup,
+            TimeoutInMinutes=5,
+            Capabilities=['CAPABILITY_IAM'],
+            OnFailure='DO_NOTHING',
+            Parameters=[
+                {
+                    'ParameterKey': 'BucketName',
+                    'ParameterValue': configuration['support_bucket_name']
+                }
+            ]
+        )
+        stack_id = response['StackId']
+        while True:
+            response = cloudformation_client.describe_stacks(StackName=stack_id)
+            if response['Stacks'][0]['StackStatus'] in ['CREATE_IN_PROGRESS']:
+                sleep(5)
+            elif response['Stacks'][0]['StackStatus'] in ['CREATE_COMPLETE']:
+                break
+        print('Stack successfully created')
+    # going to upload all the needed lambda functions
+    s3_resource.meta.client.upload_file(
+        Bucket=configuration['support_bucket_name'],
+        Filename='./src/lambda_function/cloudfront_www_edit_path_for_origin/cloudfront_www_edit_path_for_origin.zip',
+        Key='lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
+    )
+    s3_resource.meta.client.upload_file(
+        Bucket=configuration['support_bucket_name'],
+        Filename='./src/lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip',
+        Key='lambda_function/s3_trigger_artifacts_upload/package.zip'
+    )
     click.echo('Everything has been created. Now you need to run this command: cdk deploy')
