@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='webflow-aws',
-    version='0.0.1',
+    version='0.0.0',
     author='CreateInCloud',
     author_email='help@createin.cloud',
     packages=find_packages(),
