@@ -76,7 +76,8 @@ domain_name: "www.example.com"
 CNAMEs:
   - "example.com"
   - "www.example.com"
-route_53_hosted_zone_name: "Z05234556KK8DIAQM"
+route_53_hosted_zone_id: "Z05234556KK8DIAQM"
+route_53_hosted_zone_name: "example.com"
 stack_name: "WwwExampleComStack"
 # these are the optional parameters
 aws_profile_name: "default"
@@ -88,9 +89,10 @@ support_stack_name: "WebflowAWSSupport"
 - **bucket_name**: the AWS S3 bucket name you want to create. In most of the cases, it's equal to the domain name.
 - **domain_name**: the domain name you want to use to expose your website.
 - **CNAMEs**: the list of alternative domain names you want to redirect to the domain name.
-- **route_53_hosted_zone_name**: the AWS Route53 hosted zone created. This is the 
+- **route_53_hosted_zone_id**: the AWS Route53 hosted zone created. This is the 
   [guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html) you can follow to create a
   new Route53 hosted zone and get his `id`.
+- **route_53_hosted_zone_name**: the AWS Route53 hosted zone domain name.
 - **stack_name**: the name of the stack which all the resources will be grouped in. In most of the cases, it's the
   domain name without dots `.`
 - **aws_profile_name**: (optional) the AWS profile name configured in AWS CLI. If you didn't specify it,

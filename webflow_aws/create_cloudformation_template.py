@@ -25,6 +25,9 @@ class WebflowAWSStack(core.Stack):
     def __init__(
             self, scope: core.Construct, id: str, webflow_aws_setup_bucket: str, configuration: dict, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
+        route_53_hosted_zone = HostedZone.from_hosted_zone_attributes(
+            self, 'HostedZone', hosted_zone_id=configuration['route_53_hosted_zone_id'],
+            zone_name=configuration['route_53_hosted_zone_name'])
         cloud_front_lambda_execution_role = self.__create_cloud_front_lambda_execution_role()
         cloud_front_www_edit_path_for_origin_lambda = self.__create_cloud_front_www_edit_path_for_origin_lambda(
             webflow_aws_setup_bucket=webflow_aws_setup_bucket, lambda_execution_role=cloud_front_lambda_execution_role)
@@ -34,7 +37,7 @@ class WebflowAWSStack(core.Stack):
         cloud_front_origin_access_identity = self.__create_cloud_front_origin_access_identity()
         cloud_front_cache_policy = self.__create_cloud_front_cache_policy()
         ssl_certificate = self.__create_ssl_certificate(
-            route_53_hosted_zone=configuration['route_53_hosted_zone_name'], domain_name=configuration['domain_name'],
+            route_53_hosted_zone=route_53_hosted_zone, domain_name=configuration['domain_name'],
             alternative_domain_names=configuration['CNAMEs'])
         cloud_front_www = self.__create_cloud_front_www(
             origin_bucket_name=configuration['bucket_name'], cache_policy=cloud_front_cache_policy,
@@ -53,7 +56,7 @@ class WebflowAWSStack(core.Stack):
         self.__create_s3_source_bucket_policy(
             s3_source_bucket=s3_source_bucket, cloud_front_origin_access_identity=cloud_front_origin_access_identity)
         self.__create_route_53_record_group(
-            hosted_zone_id=configuration['route_53_hosted_zone_name'],
+            route_53_hosted_zone=route_53_hosted_zone,
             domain_names=configuration['CNAMEs'], cloud_front_distribution=cloud_front_www)
 
     def __create_cloud_front_cache_policy(self) -> aws_cloudfront.CachePolicy:
@@ -141,15 +144,13 @@ class WebflowAWSStack(core.Stack):
             description='Latest Version')
 
     def __create_route_53_record_group(
-            self, hosted_zone_id: str, domain_names: List[str],
+            self, route_53_hosted_zone: aws_route53.HostedZone, domain_names: List[str],
             cloud_front_distribution: aws_cloudfront.Distribution) -> List[aws_route53.ARecord]:
-        hosted_zone = HostedZone.from_hosted_zone_attributes(
-            self, 'ExistingHostedZone', hosted_zone_id=hosted_zone_id, zone_name='createin.cloud')
         return [
             aws_route53.RecordSet(
                 self, domain_name.replace('.', '').upper(),
                 record_type=aws_route53.RecordType.A,
-                zone=hosted_zone,
+                zone=route_53_hosted_zone,
                 record_name=domain_name,
                 target=aws_route53.RecordTarget.from_alias(alias_target=aws_route53_targets.CloudFrontTarget(
                     distribution=cloud_front_distribution
@@ -158,13 +159,12 @@ class WebflowAWSStack(core.Stack):
         ]
 
     def __create_ssl_certificate(
-            self, route_53_hosted_zone: str, domain_name: str,
+            self, route_53_hosted_zone: aws_route53.HostedZone, domain_name: str,
             alternative_domain_names: Optional[List[str]]) -> aws_certificatemanager.Certificate:
         return aws_certificatemanager.Certificate(
             self, 'SSLCertificate',
             domain_name=domain_name,
-            validation=CertificateValidation.from_dns(hosted_zone=HostedZone.from_hosted_zone_id(
-                self, 'HostedZone', hosted_zone_id=route_53_hosted_zone)),
+            validation=CertificateValidation.from_dns(hosted_zone=route_53_hosted_zone),
             subject_alternative_names=alternative_domain_names)
 
     def __create_s3_source_bucket(
