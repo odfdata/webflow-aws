@@ -36,7 +36,9 @@ def publish():
         click.echo('The websites folder doesn\'t contain a .zip file')
         return
     configuration = get_configuration()
-    session = boto3.session.Session(profile_name=configuration.get('aws_profile_name', 'default'))
+    session = boto3.session.Session(
+        profile_name=configuration.get('aws_profile_name', 'default'),
+        region_name=configuration['aws_region_name'])
     s3_resource = session.resource(service_name='s3')
     s3_resource.meta.client.upload_file(
         Bucket=configuration['bucket_name'],
@@ -53,7 +55,9 @@ def setup():
         click.echo(
             'The configuration.yaml file doesn\'t exist. Read the README.md file to see how to create it', err=True)
     configuration = get_configuration()
-    session = boto3.session.Session(profile_name=configuration.get('aws_profile_name', 'default'))
+    session = boto3.session.Session(
+        profile_name=configuration.get('aws_profile_name', 'default'),
+        region_name=configuration['aws_region_name'])
     cloudformation_client = session.client(service_name='cloudformation')
     click.echo('Going to create all the needed resources.')
     # check if the support stack is already created
