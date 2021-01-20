@@ -6,15 +6,17 @@ Python code to deploy your [Webflow](https://webflow.com/) static website in AWS
 
 ## Setup
 
+
 ### Prerequisites
 
-In order to use this tool, you have to install:
-- [NodeJS](https://nodejs.org/en/download/) 10.3.0 or later 
-  ([installation guide](https://itsfoss.com/install-nodejs-ubuntu/)).
-- Python 3.6 or later ([installation guide](https://docs.python-guide.org/starting/install3/linux/))
-- AWS CLI and configure it ([installation guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)).
+In order to use this tool, you need to have:
+- Access to an Active AWS account with all required permissions
+- [NodeJS](https://nodejs.org/en/download/) 10.3.0 or later installed
+  ([instructions](https://itsfoss.com/install-nodejs-ubuntu/)).
+- Python 3.6 or later with pip3 installed ([instructions](https://docs.python-guide.org/starting/install3/linux/))
+- AWS CLI installed and configured ([instructions](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)).
 
-After you installed them, you have to install the [AWS CDK tool](https://aws.amazon.com/cdk/?nc1=h_ls).
+Finally, install the [AWS CDK command line tool](https://aws.amazon.com/cdk/?nc1=h_ls) with the following command
 
 ```bash
 npm install -g aws-cdk
@@ -22,7 +24,7 @@ npm install -g aws-cdk
 
 ### Clone repo & build your package
 
-To use our tool, you have to download this repository:
+To use our tool, you have to clone this repository and install:
 
 - Clone using HTTPs:
   ```bash
