@@ -1,4 +1,5 @@
 import glob
+import os
 from time import sleep
 
 import boto3
@@ -67,7 +68,7 @@ def setup():
         if stack_info.get('StackName', '') == configuration['support_stack_name']]
     if not already_created_stack:
         # create the support stack and wait for the creation complete
-        with open('./templates/template_setup.yaml') as f:
+        with open(os.path.dirname(os.path.abspath(__file__)) + '/templates/template_setup.yaml') as f:
             template_setup = f.read()
         response = cloudformation_client.create_stack(
             StackName=configuration['support_stack_name'],
@@ -94,12 +95,15 @@ def setup():
     s3_resource = session.resource(service_name='s3')
     s3_resource.meta.client.upload_file(
         Bucket=configuration['support_bucket_name'],
-        Filename='./src/lambda_function/cloudfront_www_edit_path_for_origin/cloudfront_www_edit_path_for_origin.zip',
+        Filename=os.path.dirname(
+            os.path.abspath(__file__)) + '/lambda_function/cloudfront_www_edit_path_for_origin/'
+                                         'cloudfront_www_edit_path_for_origin.zip',
         Key='lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
     )
     s3_resource.meta.client.upload_file(
         Bucket=configuration['support_bucket_name'],
-        Filename='./src/lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip',
+        Filename=os.path.dirname(
+            os.path.abspath(__file__)) + '/lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip',
         Key='lambda_function/s3_trigger_artifacts_upload/package.zip'
     )
     click.echo('Everything has been created. Now you need to run this command: cdk deploy. If you configured a '
