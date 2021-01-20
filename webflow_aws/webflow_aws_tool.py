@@ -50,7 +50,7 @@ def publish():
     # cp app.py .
     dest = shutil.copyfile(os.path.dirname(os.path.abspath(__file__)) + '/app.py', 'app.py')
     # exec cdk deploy
-    os.system('cdk deploy')
+    os.system(f'cdk deploy --profile {configuration.get("aws_profile_name", "default")}')
     os.remove('cdk.json')
     os.remove('app.py')
     s3_resource = session.resource(service_name='s3')
