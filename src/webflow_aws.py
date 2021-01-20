@@ -4,9 +4,7 @@ from time import sleep
 import boto3
 import click
 
-from src.utils import configuration_yaml_exists, websites_folder_exists, get_configuration
-
-s3_resource = boto3.resource('s3')
+from src.utils import configuration_yaml_exists, websites_folder_exists, get_configurati, get_configuration
 
 
 @click.group()
@@ -38,6 +36,7 @@ def publish():
         click.echo('The websites folder doesn\'t contain a .zip file')
         return
     configuration = get_configuration()
+    s3_resource = boto3.resource(service_name='s3', profile_name=configuration.get('aws_profile_name', 'default'))
     s3_resource.meta.client.upload_file(
         Bucket=configuration['bucket_name'],
         Filename=zip_files[0],
@@ -52,8 +51,9 @@ def setup():
     if not configuration_yaml_exists():
         click.echo(
             'The configuration.yaml file doesn\'t exist. Read the README.md file to see how to create it', err=True)
-    cloudformation_client = boto3.client('cloudformation')
     configuration = get_configuration()
+    cloudformation_client = boto3.client(
+        service_name='cloudformation', profile_name=configuration.get('aws_profile_name', 'default'))
     click.echo('Going to create all the needed resources.')
     # check if the support stack is already created
     response = cloudformation_client.describe_stacks()
@@ -86,6 +86,7 @@ def setup():
                 break
         print('Stack successfully created')
     # going to upload all the needed lambda functions
+    s3_resource = boto3.resource(service_name='s3', profile_name=configuration.get('aws_profile_name', 'default'))
     s3_resource.meta.client.upload_file(
         Bucket=configuration['support_bucket_name'],
         Filename='./src/lambda_function/cloudfront_www_edit_path_for_origin/cloudfront_www_edit_path_for_origin.zip',
@@ -96,4 +97,6 @@ def setup():
         Filename='./src/lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip',
         Key='lambda_function/s3_trigger_artifacts_upload/package.zip'
     )
-    click.echo('Everything has been created. Now you need to run this command: cdk deploy')
+    click.echo('Everything has been created. Now you need to run this command: cdk deploy. If you configured a '
+               'different aws_profile_name, you have to remember to specify the --profile {your_profile_name} '
+               'parameter')

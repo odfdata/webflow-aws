@@ -5,5 +5,6 @@ CNAMEs:
   - "www.test.createin.cloud"
 route_53_hosted_zone_name: "Z05220491VYWKK8DIAQM"
 stack_name: "CreateInCloudTest"
+aws_profile_name: "default"
 support_bucket_name: "webflow-aws-support"
 support_stack_name: "WebflowAWSSupport"

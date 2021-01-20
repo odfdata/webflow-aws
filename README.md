@@ -9,9 +9,10 @@ Python code to deploy your [Webflow](https://webflow.com/) static website in AWS
 ### Prerequisites
 
 In order to use this tool, you have to install:
-- [NodeJS](https://nodejs.org/en/download/) 10.3.0 or later (installation instruction).
-- Python 3.6 or later (installation instruction)
-- AWS CLI and configure it (installation instruction).
+- [NodeJS](https://nodejs.org/en/download/) 10.3.0 or later 
+  ([installation guide](https://itsfoss.com/install-nodejs-ubuntu/)).
+- Python 3.6 or later ([installation guide](https://docs.python-guide.org/starting/install3/linux/))
+- AWS CLI and configure it ([installation guide](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)).
 
 After you installed them, you have to install the [AWS CDK tool](https://aws.amazon.com/cdk/?nc1=h_ls).
 
@@ -77,6 +78,7 @@ CNAMEs:
 route_53_hosted_zone_name: "Z05234556KK8DIAQM"
 stack_name: "WwwExampleComStack"
 # these are the optional parameters
+aws_profile_name: "default"
 support_bucket_name: "webflow-aws-support" 
 support_stack_name: "WebflowAWSSupport"
 ```
@@ -90,6 +92,8 @@ support_stack_name: "WebflowAWSSupport"
   new Route53 hosted zone and get his `id`.
 - **stack_name**: the name of the stack which all the resources will be grouped in. In most of the cases, it's the
   domain name without dots `.`
+- **aws_profile_name**: (optional) the AWS profile name configured in AWS CLI. If you didn't specify it,
+  the profile name is `default`
 - **support_bucket_name**: (optional) the AWS S3 bucket name created as support resource.
 - **support_stack_name**: (optional) the AWS CloudFormation Stack name which all the resources will be grouped in.
 
