@@ -46,7 +46,7 @@ The build file (generate above) will be visible in the `dist/` folder. You will 
 Without renaming them, you can install our tool on any computer with the following command
 
 ```bash
-pip3 install webflow_aws-0.0.1-py3-none-any.whl
+pip3 install dist/webflow_aws-0.0.1-py3-none-any.whl
 ```
 
 At this point, on your target machine, you will be able to use the tool by typing `webflow-aws` from any folder. To see
