@@ -97,7 +97,12 @@ support_stack_name: "WebflowAWSSupport"
 - **support_bucket_name**: (optional) the AWS S3 bucket name created as support resource.
 - **support_stack_name**: (optional) the AWS CloudFormation Stack name which all the resources will be grouped in.
 
-Place this file at the same level of the `websites/` folder.
+Place this file inside the `websites/` folder previously created. The content of that folder should be
+```bash
+|—— websites
+|    |—— weblfow-files.zip
+|    |—— configuration.yaml
+```
 
 ### Publish your website
 
