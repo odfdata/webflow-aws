@@ -1,8 +1,8 @@
 import boto3
 from aws_cdk import core
 
-from src.create_cloudformation_template import WebflowAWSStack
-from src.utils import get_configuration, configuration_yaml_exists, setup_bucket_exists
+from webflow_aws.create_cloudformation_template import WebflowAWSStack
+from webflow_aws.utils import get_configuration, configuration_yaml_exists, setup_bucket_exists
 
 if __name__ == '__main__':
     if not configuration_yaml_exists:
@@ -18,7 +18,7 @@ if __name__ == '__main__':
             aws_region_name=configuration['aws_region_name'])
     if not bucket_exists:
         print(f'The bucket setup bucket doesn\'t exist. Run webflow-aws setup to create it')
-        exit()
-    app = core.App()
-    WebflowAWSStack(app, configuration['stack_name'], webflow_aws_setup_bucket, configuration)
-    result = app.synth()
+    else:
+        app = core.App()
+        WebflowAWSStack(app, configuration['stack_name'], webflow_aws_setup_bucket, configuration)
+        result = app.synth()

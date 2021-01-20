@@ -19,6 +19,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        webflow-aws=src.webflow_aws:cli
+        webflow-aws=webflow_aws.webflow_aws_tool:cli
     '''
 )

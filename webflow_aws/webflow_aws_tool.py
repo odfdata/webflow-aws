@@ -5,7 +5,8 @@ from time import sleep
 import boto3
 import click
 
-from src.utils import configuration_yaml_exists, websites_folder_exists, get_configuration, get_setup_bucket_name
+from webflow_aws.utils import configuration_yaml_exists, websites_folder_exists, get_configuration, \
+    get_setup_bucket_name
 
 
 @click.group()
