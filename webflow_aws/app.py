@@ -19,6 +19,7 @@ if __name__ == '__main__':
     if not bucket_exists:
         print(f'The bucket setup bucket doesn\'t exist. Run webflow-aws setup to create it')
     else:
+        env_eu = core.Environment(region=configuration['aws_region_name'])
         app = core.App()
-        WebflowAWSStack(app, configuration['stack_name'], webflow_aws_setup_bucket, configuration)
+        WebflowAWSStack(app, configuration['stack_name'], webflow_aws_setup_bucket, configuration, env=env_eu)
         result = app.synth()
