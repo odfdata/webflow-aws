@@ -51,7 +51,8 @@ def publish():
     dest = shutil.copyfile(os.path.dirname(os.path.abspath(__file__)) + '/app.py', 'app.py')
     # exec cdk deploy
     os.system('cdk deploy')
-    # TODO: rm -rf cdk.json && app.py
+    os.remove('cdk.json')
+    os.remove('app.py')
     s3_resource = session.resource(service_name='s3')
     s3_resource.meta.client.upload_file(
         Bucket=configuration['bucket_name'],
