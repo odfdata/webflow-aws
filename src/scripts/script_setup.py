@@ -8,7 +8,7 @@ if __name__ == '__main__':
     s3_resource = boto3.resource('s3')
     with open('../../configuration.yaml') as f:
         configuration = yaml.load(f, Loader=yaml.SafeLoader)
-    with open('../../template_setup.yaml') as f:
+    with open('../../templates/template_setup.yaml') as f:
         template_setup = f.read()
     response = cloudformation_client.create_stack(
         StackName=configuration['support_stack_name'],

@@ -15,5 +15,9 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.6',
         'Operating System :: OS Independent'
-    ]
+    ],
+    entry_points='''
+        [console_scripts]
+        webflow-aws=src.webflow_aws:cli
+    '''
 )
