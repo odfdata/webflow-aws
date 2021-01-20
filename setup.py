@@ -11,6 +11,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.6',
     install_requires=requirements,
+    include_package_data=True,
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.6',
