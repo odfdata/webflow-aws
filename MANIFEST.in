@@ -1,3 +1,4 @@
 include src/lambda_function/cloudfront_www_edit_path_for_origin/cloudfront_www_edit_path_for_origin.zip
 include src/lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip
+includ src/templates/template_setup.yaml
 recursive-exclude tests *

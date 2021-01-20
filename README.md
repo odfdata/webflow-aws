@@ -70,6 +70,7 @@ file you can customize:
 
 ```yaml
 # these are the required parameters
+aws_region_name: "us-east-1"
 bucket_name: "www.example.com"
 domain_name: "www.example.com"
 CNAMEs:
@@ -83,7 +84,7 @@ support_bucket_name: "webflow-aws-support"
 support_stack_name: "WebflowAWSSupport"
 ```
 
-
+- **aws_region_name**: the AWS region name which you want to create the resource in.
 - **bucket_name**: the AWS S3 bucket name you want to create. In most of the cases, it's equal to the domain name.
 - **domain_name**: the domain name you want to use to expose your website.
 - **CNAMEs**: the list of alternative domain names you want to redirect to the domain name.
