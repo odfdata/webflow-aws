@@ -36,7 +36,8 @@ def publish():
         click.echo('The websites folder doesn\'t contain a .zip file')
         return
     configuration = get_configuration()
-    s3_resource = boto3.resource(service_name='s3', profile_name=configuration.get('aws_profile_name', 'default'))
+    session = boto3.session.Session(profile_name=configuration.get('aws_profile_name', 'default'))
+    s3_resource = session.resource(service_name='s3')
     s3_resource.meta.client.upload_file(
         Bucket=configuration['bucket_name'],
         Filename=zip_files[0],
@@ -52,8 +53,8 @@ def setup():
         click.echo(
             'The configuration.yaml file doesn\'t exist. Read the README.md file to see how to create it', err=True)
     configuration = get_configuration()
-    cloudformation_client = boto3.client(
-        service_name='cloudformation', profile_name=configuration.get('aws_profile_name', 'default'))
+    session = boto3.session.Session(profile_name=configuration.get('aws_profile_name', 'default'))
+    cloudformation_client = session.client(service_name='cloudformation')
     click.echo('Going to create all the needed resources.')
     # check if the support stack is already created
     response = cloudformation_client.describe_stacks()
@@ -86,7 +87,7 @@ def setup():
                 break
         print('Stack successfully created')
     # going to upload all the needed lambda functions
-    s3_resource = boto3.resource(service_name='s3', profile_name=configuration.get('aws_profile_name', 'default'))
+    s3_resource = session.resource(service_name='s3')
     s3_resource.meta.client.upload_file(
         Bucket=configuration['support_bucket_name'],
         Filename='./src/lambda_function/cloudfront_www_edit_path_for_origin/cloudfront_www_edit_path_for_origin.zip',
