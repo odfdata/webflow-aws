@@ -22,11 +22,12 @@ from aws_cdk.core import Fn, Duration
 
 class WebflowAWSStack(core.Stack):
 
-    def __init__(self, scope: core.Construct, id: str, configuration: dict, **kwargs) -> None:
+    def __init__(
+            self, scope: core.Construct, id: str, webflow_aws_setup_bucket: str, configuration: dict, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
         cloud_front_lambda_execution_role = self.__create_cloud_front_lambda_execution_role()
         cloud_front_www_edit_path_for_origin_lambda = self.__create_cloud_front_www_edit_path_for_origin_lambda(
-            lambda_execution_role=cloud_front_lambda_execution_role)
+            webflow_aws_setup_bucket=webflow_aws_setup_bucket, lambda_execution_role=cloud_front_lambda_execution_role)
         cloud_front_www_edit_path_for_origin_lambda_version = \
             self.__create_cloud_front_www_edit_path_for_origin_lambda_version(
                 cloud_front_www_edit_path_for_origin_lambda=cloud_front_www_edit_path_for_origin_lambda)
@@ -43,7 +44,8 @@ class WebflowAWSStack(core.Stack):
         s3_trigger_lambda_execution_role = self.__create_s3_trigger_lambda_execution_role(
             bucket_name=configuration['bucket_name'], cloudfront_distribution=cloud_front_www)
         s3_trigger_lambda_function = self.__create_s3_trigger_lambda_function(
-            execution_role=s3_trigger_lambda_execution_role, cloud_front_distribution=cloud_front_www)
+            webflow_aws_setup_bucket=webflow_aws_setup_bucket, execution_role=s3_trigger_lambda_execution_role,
+            cloud_front_distribution=cloud_front_www)
         s3_source_bucket = self.__create_s3_source_bucket(
             bucket_name=configuration['bucket_name'], s3_trigger_lambda_function=s3_trigger_lambda_function)
         self.__create_s3_trigger_lambda_invoke_permission(
@@ -116,7 +118,7 @@ class WebflowAWSStack(core.Stack):
         )
 
     def __create_cloud_front_www_edit_path_for_origin_lambda(
-            self, lambda_execution_role: aws_iam.Role) -> aws_lambda.Function:
+            self, webflow_aws_setup_bucket: str, lambda_execution_role: aws_iam.Role) -> aws_lambda.Function:
         return aws_lambda.Function(
             self, 'CloudFrontWWWEditPathForOrigin',
             function_name='CloudFront_WWW_editPathForOriginTest',
@@ -128,7 +130,7 @@ class WebflowAWSStack(core.Stack):
             role=lambda_execution_role,
             code=Code.bucket(
                 bucket=Bucket.from_bucket_name(
-                    self, "SourceBucketWWWEditPathForOriginLambda", bucket_name='webflow-aws-support'),
+                    self, "SourceBucketWWWEditPathForOriginLambda", bucket_name=webflow_aws_setup_bucket),
                 key='lambda_function/cloudfront_www_edit_path_for_origin/package.zip'))
 
     def __create_cloud_front_www_edit_path_for_origin_lambda_version(
@@ -223,7 +225,7 @@ class WebflowAWSStack(core.Stack):
                             f'arn:aws:s3:::{bucket_name}/*'])])})
 
     def __create_s3_trigger_lambda_function(
-            self, execution_role: aws_iam.Role,
+            self, webflow_aws_setup_bucket: str, execution_role: aws_iam.Role,
             cloud_front_distribution: aws_cloudfront.Distribution) -> aws_lambda.Function:
         return aws_lambda.Function(
             self, 'S3TriggerLambdaFunction',
@@ -236,7 +238,7 @@ class WebflowAWSStack(core.Stack):
             timeout=Duration.seconds(300),
             environment={'CDN_DISTRIBUTION_ID': cloud_front_distribution.distribution_id},
             code=Code.bucket(
-                bucket=Bucket.from_bucket_name(self, "WebflowAWSSupport", bucket_name='webflow-aws-support'),
+                bucket=Bucket.from_bucket_name(self, "WebflowAWSSupport", bucket_name=webflow_aws_setup_bucket),
                 key='lambda_function/s3_trigger_artifacts_upload/package.zip'))
 
     def __create_s3_trigger_lambda_invoke_permission(

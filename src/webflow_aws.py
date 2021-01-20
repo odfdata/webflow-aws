@@ -5,7 +5,7 @@ from time import sleep
 import boto3
 import click
 
-from src.utils import configuration_yaml_exists, websites_folder_exists, get_configuration
+from src.utils import configuration_yaml_exists, websites_folder_exists, get_configuration, get_setup_bucket_name
 
 
 @click.group()
@@ -66,10 +66,14 @@ def setup():
     already_created_stack = [
         stack_info for stack_info in response.get('Stacks', [])
         if stack_info.get('StackName', '') == configuration['support_stack_name']]
+    setup_bucket_name = get_setup_bucket_name(
+        aws_profile_name=configuration.get('aws_profile_name', 'default'),
+        aws_region_name=configuration['aws_region_name'])
     if not already_created_stack:
         # create the support stack and wait for the creation complete
         with open(os.path.dirname(os.path.abspath(__file__)) + '/templates/template_setup.yaml') as f:
             template_setup = f.read()
+
         response = cloudformation_client.create_stack(
             StackName=configuration['support_stack_name'],
             TemplateBody=template_setup,
@@ -79,7 +83,7 @@ def setup():
             Parameters=[
                 {
                     'ParameterKey': 'BucketName',
-                    'ParameterValue': configuration['support_bucket_name']
+                    'ParameterValue': setup_bucket_name
                 }
             ]
         )
@@ -94,14 +98,14 @@ def setup():
     # going to upload all the needed lambda functions
     s3_resource = session.resource(service_name='s3')
     s3_resource.meta.client.upload_file(
-        Bucket=configuration['support_bucket_name'],
+        Bucket=setup_bucket_name,
         Filename=os.path.dirname(
             os.path.abspath(__file__)) + '/lambda_function/cloudfront_www_edit_path_for_origin/'
                                          'cloudfront_www_edit_path_for_origin.zip',
         Key='lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
     )
     s3_resource.meta.client.upload_file(
-        Bucket=configuration['support_bucket_name'],
+        Bucket=setup_bucket_name,
         Filename=os.path.dirname(
             os.path.abspath(__file__)) + '/lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip',
         Key='lambda_function/s3_trigger_artifacts_upload/package.zip'
