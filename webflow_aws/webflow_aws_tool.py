@@ -1,12 +1,15 @@
 import glob
+import json
 import os
+import shutil
 from time import sleep
-
+from aws_cdk import core
 import boto3
 import click
 
+from webflow_aws.create_cloudformation_template import WebflowAWSStack
 from webflow_aws.utils import configuration_yaml_exists, websites_folder_exists, get_configuration, \
-    get_setup_bucket_name
+    get_setup_bucket_name, setup_bucket_exists
 
 
 @click.group()
@@ -41,6 +44,14 @@ def publish():
     session = boto3.session.Session(
         profile_name=configuration.get('aws_profile_name', 'default'),
         region_name=configuration['aws_region_name'])
+    # nano cdk.json
+    with open('cdk.json', 'w') as outfile:
+        json.dump({'app': 'python3 app.py'}, outfile)
+    # cp app.py .
+    dest = shutil.copyfile(os.path.dirname(os.path.abspath(__file__)) + '/app.py', 'app.py')
+    # exec cdk deploy
+    os.system('cdk deploy')
+    # TODO: rm -rf cdk.json && app.py
     s3_resource = session.resource(service_name='s3')
     s3_resource.meta.client.upload_file(
         Bucket=configuration['bucket_name'],
