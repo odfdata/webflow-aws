@@ -4,7 +4,7 @@ from time import sleep
 import boto3
 import click
 
-from src.utils import configuration_yaml_exists, websites_folder_exists, get_configurati, get_configuration
+from src.utils import configuration_yaml_exists, websites_folder_exists, get_configuration
 
 
 @click.group()
