@@ -1,4 +1,3 @@
-aws_region_name: "us-east-1"
 bucket_name: "test.createin.cloud"
 domain_name: "test.createin.cloud"
 CNAMEs:
