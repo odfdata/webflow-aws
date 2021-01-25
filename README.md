@@ -46,7 +46,7 @@ The build file (generate above) will be visible in the `dist/` folder. You will 
 Without renaming them, you can install our tool on any computer with the following command
 
 ```bash
-pip3 install webflow_aws-0.0.1-py3-none-any.whl
+pip3 install dist/webflow_aws-0.0.1-py3-none-any.whl
 ```
 
 At this point, on your target machine, you will be able to use the tool by typing `webflow-aws` from any folder. To see
@@ -61,22 +61,22 @@ webflow-aws --help
 Finally, you are ready to go to **Webflow** and download your `.zip` file 
 ([click here](https://university.webflow.com/lesson/code-export) to see the guide on how to download it).
 
-Once you downloaded it, create a folder named `websites` and put the `.zip` file inside.
+Once you downloaded it, create a folder and put the `.zip` file inside. The folder's name doesn't matter.
 
-### Create configuration.yaml file
+### Create webflow-aws-config.yaml file
 
-The configuration.yaml file allows you to customize the website you want to publish online. This is an example
+The webflow-aws-config.yaml file allows you to customize the website you want to publish online. This is an example
 file you can customize:
 
 ```yaml
 # these are the required parameters
-aws_region_name: "us-east-1"
 bucket_name: "www.example.com"
 domain_name: "www.example.com"
 CNAMEs:
   - "example.com"
   - "www.example.com"
-route_53_hosted_zone_name: "Z05234556KK8DIAQM"
+route_53_hosted_zone_id: "Z05234556KK8DIAQM"
+route_53_hosted_zone_name: "example.com"
 stack_name: "WwwExampleComStack"
 # these are the optional parameters
 aws_profile_name: "default"
@@ -84,13 +84,13 @@ support_bucket_name: "webflow-aws-support"
 support_stack_name: "WebflowAWSSupport"
 ```
 
-- **aws_region_name**: the AWS region name which you want to create the resource in.
 - **bucket_name**: the AWS S3 bucket name you want to create. In most of the cases, it's equal to the domain name.
 - **domain_name**: the domain name you want to use to expose your website.
 - **CNAMEs**: the list of alternative domain names you want to redirect to the domain name.
-- **route_53_hosted_zone_name**: the AWS Route53 hosted zone created. This is the 
+- **route_53_hosted_zone_id**: the AWS Route53 hosted zone created. This is the 
   [guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html) you can follow to create a
   new Route53 hosted zone and get his `id`.
+- **route_53_hosted_zone_name**: the AWS Route53 hosted zone domain name.
 - **stack_name**: the name of the stack which all the resources will be grouped in. In most of the cases, it's the
   domain name without dots `.`
 - **aws_profile_name**: (optional) the AWS profile name configured in AWS CLI. If you didn't specify it,
@@ -98,28 +98,24 @@ support_stack_name: "WebflowAWSSupport"
 - **support_bucket_name**: (optional) the AWS S3 bucket name created as support resource.
 - **support_stack_name**: (optional) the AWS CloudFormation Stack name which all the resources will be grouped in.
 
-Place this file at the same level of the `websites/` folder.
+Place this file at the same level of the `.zip` file downloaded before.
 
 ### Publish your website
 
-Now you are ready to publish your website online. Go in the folder that contains the `websites/` folder 
-and the `configuration.yaml` file.
+Now you are ready to publish your website online. 
+
+Go inside the folder created before that contains:
+
++ `webflow-aws-config.yaml` file
++ `.zip` file
 
 If it's the first time you are deploying it online, you have to call this command before:
 ```bash
 webflow-aws setup
 ```
-This command will create the Cloud Formation stack containing the support resources. After this command, 
-you can execute
+This command will create the Cloud Formation stack containing the support resources. 
 
-```bash
-cdk deploy
-```
-
-To create the other Cloud Formation stack to prepare all the needed resources to expose your static WWW website 
-created with Webflow.
-
-Now you ready to publish online the `.zip` file you placed inside the `websites/` folder with this command:
+After this command, you can execute:
 
 ```bash
 webflow-aws publish

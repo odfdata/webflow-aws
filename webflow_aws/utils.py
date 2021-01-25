@@ -11,11 +11,11 @@ def configuration_yaml_exists() -> bool:
     Check if the configuration.yaml file exists.
     :return: True if the file exists, False otherwise
     """
-    return os.path.exists('./configuration.yaml')
+    return os.path.exists('./webflow-aws-config.yaml')
 
 
 def get_configuration() -> Dict:
-    with open('./configuration.yaml') as f:
+    with open('./webflow-aws-config.yaml') as f:
         configuration = yaml.load(f, Loader=yaml.SafeLoader)
     return configuration
 
@@ -37,11 +37,3 @@ def setup_bucket_exists(aws_region_name: str, aws_profile_name: str) -> (bool, s
     except ClientError:
         # The bucket does not exist or you have no access.
         return False, None
-
-
-def websites_folder_exists() -> bool:
-    """
-    Check if the websites/ folder exists.
-    :return: True if the folder exists, False otherwise
-    """
-    return os.path.exists('./websites')
