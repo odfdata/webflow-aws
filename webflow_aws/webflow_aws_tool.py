@@ -79,7 +79,6 @@ def setup():
         if stack_info.get('StackName', '') == configuration['support_stack_name']]
     setup_bucket_name = get_setup_bucket_name(
         aws_region_name=aws_region_name, aws_profile_name=configuration.get('aws_profile_name', 'default'))
-    click.echo(f'Setup bucket name {setup_bucket_name}')
     if not already_created_stack:
         # create the support stack and wait for the creation complete
         with open(os.path.dirname(os.path.abspath(__file__)) + '/templates/template_setup.yaml') as f:
