@@ -1,0 +1,5 @@
+include webflow_aws/lambda_function/cloudfront_www_edit_path_for_origin/cloudfront_www_edit_path_for_origin.zip
+include webflow_aws/lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip
+include webflow_aws/templates/template_setup.yaml
+include cdk.json
+recursive-exclude tests *

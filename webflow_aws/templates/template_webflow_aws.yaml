@@ -13,8 +13,10 @@ Parameters:
     Type: CommaDelimitedList
 
 Resources:
+  # 'AWS::IAM::Role' -> The IAM Role used by the lambda function to get the updated zip file from S3, upload the
+  # unpacked one and invalidate the CDN
   S3TriggerLambdaExecutionRole:
-    Type: AWS::IAM::Role
+    Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -27,7 +29,7 @@ Resources:
               - sts:AssumeRole
       Path: "/"
       RoleName: 'S3TriggerLambdaExecutionRole'
-      Description: 'Execution role that allows the lambda function to get the uploaded zip from S3, upload it the unpacked one and invalidate the CDN'
+      Description: 'Execution role that allows the lambda function to get the uploaded zip from S3, upload the unpacked one and invalidate the CDN'
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
@@ -59,6 +61,7 @@ Resources:
                     - - 'arn:aws:s3:::'
                       - !Ref BucketName
                       - '/*'
+  # 'AWS::Lambda::Function' -> Function triggered once a zip file is uploaded to the bucket
   S3TriggerLambdaFunction:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -74,9 +77,9 @@ Resources:
       Environment:
         Variables:
           CDN_DISTRIBUTION_ID: !Ref CloudFrontWWW
+  # 'AWS::S3:Bucket' -> The S3 bucket which the Webflow zip file will be uploaded in.
   S3SourceBucket:
     Type: 'AWS::S3::Bucket'
-    DeletionPolicy: Retain
     DependsOn:
       - S3TriggerLambdaInvokePermission
     Properties:
@@ -97,6 +100,7 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+  # 'AWS::Lambda::Permission' -> The permission to invoke the lambda function from the S3 bucket
   S3TriggerLambdaInvokePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -105,8 +109,9 @@ Resources:
       Principal: s3.amazonaws.com
       SourceAccount: !Ref 'AWS::AccountId'
       SourceArn: !Sub 'arn:aws:s3:::${BucketName}'
+  # 'AWS::IAM::Role' -> The IAM role used by the lambda functions triggered by Cloud Front (lambda @edge).
   CloudFrontLambdaExecutionRole:
-    Type: AWS::IAM::Role
+    Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -121,6 +126,7 @@ Resources:
       Path: "/"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  # 'AWS::Lambda::Function' -> The lambda function by the CloudFront event type "origin-request".
   CloudFrontWWWEditPathForOrigin:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -134,28 +140,11 @@ Resources:
       Code:
         S3Bucket: !Ref SupportBucketName
         S3Key: 'lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
+  # 'AWS::Lambda::Version' -> The published version the of CloudFrontWWWEditPathForOrigin lambda function
   CloudFrontWWWEditPathForOriginVersion:
     Type: 'AWS::Lambda::Version'
     Properties:
       FunctionName: !Ref CloudFrontWWWEditPathForOrigin
-      Description: Latest version
-  CloudFrontWWWCheckLanguage:
-    Type: 'AWS::Lambda::Function'
-    Properties:
-      FunctionName: CloudFront_WWW_checkLanguageTest
-      Description: if there is no language in the URL path, adds it and redirect the user
-      Handler: index.handler
-      Runtime: nodejs12.x
-      Timeout: 5
-      MemorySize: 128
-      Role: !GetAtt CloudFrontLambdaExecutionRole.Arn
-      Code:
-        S3Bucket: !Ref SupportBucketName
-        S3Key: 'lambda_function/cloudfront_www_check_language/package.zip'
-  CloudFrontWWWCheckLanguageVersion:
-    Type: 'AWS::Lambda::Version'
-    Properties:
-      FunctionName: !Ref CloudFrontWWWCheckLanguage
       Description: Latest version
   CloudFrontCachePolicy:
     Type: 'AWS::CloudFront::CachePolicy'
@@ -174,11 +163,14 @@ Resources:
             HeaderBehavior: none
           QueryStringsConfig:
             QueryStringBehavior: none
+  # 'AWS::CloudFront::CloudFrontOriginAccessIdentity' -> The user allowed to access the CloudFront distribution. This
+  # user will be used to restrict the access to the S3 bucket only from the CDN
   CloudFrontOriginAccessIdentity:
     Type: 'AWS::CloudFront::CloudFrontOriginAccessIdentity'
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: 'cloudfront-only-acc-identity'
+  # 'AWS::S3::BucketPolicy' -> The bucket policy applied to the S3SourceBucket.
   S3SourceBucketPolicy:
     Type: 'AWS::S3::BucketPolicy'
     Properties:
@@ -198,6 +190,8 @@ Resources:
                 - ''
                 - - 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity '
                   - !Ref CloudFrontOriginAccessIdentity
+  # 'AWS::CertificateManager::Certificate' -> The SSL/TLS certificate used by the CloudFront distribution to cover
+  # all the alternative names associated with it. More information here:
   # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-certificatemanager-certificate.html
   SSLCertificate:
     Type: 'AWS::CertificateManager::Certificate'
@@ -210,6 +204,7 @@ Resources:
       SubjectAlternativeNames:
         - test.createin.cloud
         - '*.test.createin.cloud'
+  # 'AWS::CloudFront::Distribution' -> The CloudFront distribution created to expose the S3 bucket content.
   CloudFrontWWW:
     Type: 'AWS::CloudFront::Distribution'
     Properties:
@@ -219,6 +214,11 @@ Resources:
         Aliases: !Ref CNAMEs
         HttpVersion: http2
         PriceClass: PriceClass_100
+        CustomErrorResponses:
+          - ErrorCachingMinTTL: 300
+            ErrorCode: 403
+            ResponseCode: 404
+            ResponsePagePath: '/404.html'
         Origins:
           - S3OriginConfig:
               OriginAccessIdentity: !Join
@@ -253,15 +253,11 @@ Resources:
             - EventType: origin-request
               IncludeBody: false
               LambdaFunctionARN: !Ref CloudFrontWWWEditPathForOriginVersion
-            - EventType: viewer-request
-              IncludeBody: false
-              LambdaFunctionARN: !Ref CloudFrontWWWCheckLanguageVersion
         ViewerCertificate:
           AcmCertificateArn: !Ref SSLCertificate
           MinimumProtocolVersion: TLSv1.2_2019
           SslSupportMethod: sni-only
-  # Route53RecordWWWTestCreateinCloud:
-  #   Type: 'AWS::Route53::RecordSet'
+  # 'AWS::Route53::RecordSetGroup' -> The Route53 records to point a valid domain to the CDN.
   Route53RecordGroup:
     Type: 'AWS::Route53::RecordSetGroup'
     Properties:
