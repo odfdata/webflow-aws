@@ -65,6 +65,7 @@ def setup():
         click.echo(
             'The webflow-aws-config.yaml file doesn\'t exist. Read the README.md file to see how to create it',
             err=True)
+        return
     configuration = get_configuration()
     session = boto3.session.Session(
         profile_name=configuration.get('aws_profile_name', 'default'),
@@ -102,9 +103,14 @@ def setup():
             response = cloudformation_client.describe_stacks(StackName=stack_id)
             if response['Stacks'][0]['StackStatus'] in ['CREATE_IN_PROGRESS']:
                 sleep(5)
+            elif response['Stacks'][0]['StackStatus'] in ['CREATE_FAILED']:
+                click.echo(
+                    'Error creating the support stack',
+                    err=True)
+                return
             elif response['Stacks'][0]['StackStatus'] in ['CREATE_COMPLETE']:
                 break
-        print('Stack successfully created')
+        click.echo('Stack successfully created')
     # going to upload all the needed lambda functions
     s3_resource = session.resource(service_name='s3')
     s3_resource.meta.client.upload_file(
