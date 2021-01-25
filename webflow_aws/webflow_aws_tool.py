@@ -39,7 +39,9 @@ def publish():
         click.echo('The folder doesn\'t contain a .zip file')
         return
     configuration = get_configuration()
-    session = boto3.session.Session(profile_name=configuration.get('aws_profile_name', 'default'))
+    session = boto3.session.Session(
+        profile_name=configuration.get('aws_profile_name', 'default'),
+        region_name=aws_region_name)
     # nano cdk.json
     with open('cdk.json', 'w') as outfile:
         json.dump({'app': 'python3 app.py'}, outfile)
@@ -64,7 +66,9 @@ def setup():
             'The webflow-aws-config.yaml file doesn\'t exist. Read the README.md file to see how to create it',
             err=True)
     configuration = get_configuration()
-    session = boto3.session.Session(profile_name=configuration.get('aws_profile_name', 'default'))
+    session = boto3.session.Session(
+        profile_name=configuration.get('aws_profile_name', 'default'),
+        region_name=aws_region_name)
     cloudformation_client = session.client(service_name='cloudformation')
     click.echo('Going to create all the needed resources.')
     # check if the support stack is already created

@@ -58,6 +58,7 @@ class WebflowAWSStack(core.Stack):
         self.__create_route_53_record_group(
             route_53_hosted_zone=route_53_hosted_zone,
             domain_names=configuration['CNAMEs'], cloud_front_distribution=cloud_front_www)
+        self.__create_cloud_front_www_output(cloud_front_www=cloud_front_www)
 
     def __create_cloud_front_cache_policy(self) -> aws_cloudfront.CachePolicy:
         return aws_cloudfront.CachePolicy(
@@ -143,6 +144,13 @@ class WebflowAWSStack(core.Stack):
             lambda_=cloud_front_www_edit_path_for_origin_lambda,
             description='Latest Version')
 
+    def __create_cloud_front_www_output(self, cloud_front_www: aws_cloudfront.Distribution):
+        return core.CfnOutput(
+            self, 'ARecord',
+            value=cloud_front_www.distribution_domain_name,
+            description='If your domain name is not hosted in AWS Route53, you have to create an A Record in your DNS',
+            export_name='ARecord')
+
     def __create_route_53_record_group(
             self, route_53_hosted_zone: aws_route53.HostedZone, domain_names: List[str],
             cloud_front_distribution: aws_cloudfront.Distribution) -> List[aws_route53.ARecord]:
@@ -169,7 +177,6 @@ class WebflowAWSStack(core.Stack):
 
     def __create_s3_source_bucket(
             self, bucket_name: str, s3_trigger_lambda_function: aws_lambda.Function) -> aws_s3.Bucket:
-        # TODO: add the depends_on property
         s3_bucket = aws_s3.Bucket(
             self, 'S3SourceBucket',
             bucket_name=bucket_name,
