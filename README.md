@@ -93,6 +93,9 @@ support_stack_name: "WebflowAWSSupport"
 - **route_53_hosted_zone_name**: the AWS Route53 hosted zone domain name.
 - **stack_name**: the name of the stack which all the resources will be grouped in. In most of the cases, it's the
   domain name without dots `.`
+  
+#### Optional Parameters
+
 - **aws_profile_name**: (optional) the AWS profile name configured in AWS CLI. If you didn't specify it,
   the profile name is `default`
 - **support_bucket_name**: (optional) the AWS S3 bucket name created as support resource.
