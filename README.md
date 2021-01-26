@@ -67,7 +67,7 @@ Once you downloaded it, create a folder and put the `.zip` file inside. The fold
 
 ### Create webflow-aws-config.yaml file
 
-The webflow-aws-config.yaml file allows you to customize the website you want to publish online. This is an example
+The `webflow-aws-config.yaml` file allows you to customize the website you want to publish online. This is an example
 file you can customize:
 
 ```yaml
@@ -135,14 +135,5 @@ In 2 minutes, the content will be public available under the specified **domain 
   
 ## Next releases
 
-We are planning to release this tool under [Pypi](https://pypi.org/) so the user will be able to install it running
-the command:
-
-```bash
-pip3 install webflow-aws
-```
-
-We are also planning to create the `webflow-aws create-config` command to guide the user through the creation of the configuration
-file setting all the customizable parameters without having him to create his own file.
-The other release planned is the improvement of the `webflow-aws setup` command: we will integrate the **cdk deploy**
-command inside it.
+We are planning to create the `webflow-aws create-config` command to guide the user through the creation of the 
+configuration file setting all the customizable parameters without having him to create his own file.
