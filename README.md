@@ -71,7 +71,7 @@ The `webflow-aws-config.yaml` file allows you to customize the website you want 
 file you can customize:
 
 ```yaml
-# these are the required parameters
+# REQUIRED parameters
 bucket_name: "www.example.com"
 domain_name: "www.example.com"
 CNAMEs:
@@ -80,7 +80,8 @@ CNAMEs:
 route_53_hosted_zone_id: "Z05234556KK8DIAQM"
 route_53_hosted_zone_name: "example.com"
 stack_name: "WwwExampleComStack"
-# these are the optional parameters
+
+# OPTIONAL parameters
 aws_profile_name: "default"
 support_bucket_name: "webflow-aws-support" 
 support_stack_name: "WebflowAWSSupport"
