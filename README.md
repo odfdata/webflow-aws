@@ -4,8 +4,7 @@ Python code to deploy your [Webflow](https://webflow.com/) static website in AWS
 | :point_up:    | In this version, everything needs to be hosted in AWS, also your domain. |
 |---------------|:-------------------------------------------------------------------------|
 
-## Setup
-
+## Getting Started
 
 ### Prerequisites
 
@@ -22,7 +21,20 @@ Finally, install the [AWS CDK command line tool](https://aws.amazon.com/cdk/?nc1
 npm install -g aws-cdk
 ```
 
-### Clone repo & build your package
+### Installation
+
+You can download and install the latest version of this tool from the Python package index ([Pypi](https://pypi.org)) 
+as follows:
+
+```bash
+pip3 install --upgrade webflow-aws
+```
+
+#### Advanced Installation
+
+This section explains how build and install the Python package using the source code.
+
+##### Clone repo & build your package
 
 To use our tool, you have to clone this repository and install:
 
@@ -42,14 +54,26 @@ cd webflow-aws
 python3 setup.py sdist bdist_wheel
 ```
 
-### Install the package
+##### Install the package
 
 The build file (generate above) will be visible in the `dist/` folder. You will have a `wheel` and `tar.gz` file. 
-Without renaming them, you can install our tool on any computer with the following command
+If you previously installed another version of `webflow-aws`, it's recommended to uninstall it running the following
+command:
 
 ```bash
-pip3 install dist/webflow_aws-0.0.1-py3-none-any.whl
+pip3 uninstall dist/webflow_aws-{version}-py3-none-any.whl
 ```
+
+Now you're ready to install the package inside the `dist/`folder. Without renaming them, you can install our tool on 
+any computer with the following command
+
+```bash
+pip3 install dist/webflow_aws-{version}-py3-none-any.whl
+```
+
+You can find the `{version}` inside the `setup.py` file.
+
+### Check if everything is working
 
 At this point, on your target machine, you will be able to use the tool by typing `webflow-aws` from any folder. To see
 the available commands, and check if it's correctly installed, run the following command
