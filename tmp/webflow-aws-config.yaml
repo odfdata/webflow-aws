@@ -1,0 +1,10 @@
+CNAMEs:
+- pippo.com
+aws_profile_name: ''
+bucket_name: ''
+domain_name: ''
+route_53_hosted_zone_id: ''
+route_53_hosted_zone_name: ''
+stack_name: ''
+support_bucket_name: ''
+support_stack_name: ''
