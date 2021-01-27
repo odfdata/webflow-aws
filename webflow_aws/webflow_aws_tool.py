@@ -89,11 +89,16 @@ def setup():
         while True:
             response = cloudformation_client.describe_stacks(StackName=stack_id)
             if response['Stacks'][0]['StackStatus'] in ['CREATE_IN_PROGRESS']:
-                sleep(5)
+                timeout = 5
+                while timeout > 0:
+                    click.echo('.', nl=False)
+                    sleep(0.5)
+                    timeout = timeout - 0.5
             elif response['Stacks'][0]['StackStatus'] in ['CREATE_FAILED']:
                 click.echo('Error creating the support stack', err=True)
                 return
             elif response['Stacks'][0]['StackStatus'] in ['CREATE_COMPLETE']:
+                click.echo('')
                 break
         click.echo('Stack successfully created')
     # going to upload all the needed lambda functions
