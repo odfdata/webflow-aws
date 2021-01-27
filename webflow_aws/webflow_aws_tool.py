@@ -20,7 +20,7 @@ def cli():
     pass
 
 
-@cli.command(short_help='Create the configuration.yaml file')
+@cli.command(short_help='Create the webflow-aws-config.yaml file')
 def create_config():
     """
     Creates the configuration file. If a file is already present, asks the user if he'd like to overwrite it or keep
@@ -39,6 +39,7 @@ def create_config():
     # ask for elements
     config_maker = ConfigMaker(load_configuration=config_exists)
     config_maker.ask_cnames()
+    # ask if the user has route53 and, if so, add params
     config_maker.write_config()
 
 
