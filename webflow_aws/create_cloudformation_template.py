@@ -124,8 +124,7 @@ class WebflowAWSStack(core.Stack):
     def __create_cloud_front_www_edit_path_for_origin_lambda(
             self, webflow_aws_setup_bucket: str, lambda_execution_role: aws_iam.Role) -> aws_lambda.Function:
         return aws_lambda.Function(
-            self, 'CloudFrontWWWEditPathForOrigin',
-            function_name='CloudFront_WWW_editPathForOriginTest',
+            self, 'CloudFrontEditPathForOrigin',
             description='Appends .html extension to universal paths, preserving files with other extensions (ex .css)',
             handler='index.handler',
             runtime=aws_lambda.Runtime.NODEJS_12_X,
@@ -140,7 +139,7 @@ class WebflowAWSStack(core.Stack):
     def __create_cloud_front_www_edit_path_for_origin_lambda_version(
             self, cloud_front_www_edit_path_for_origin_lambda: aws_lambda.Function) -> aws_lambda.Version:
         return aws_lambda.Version(
-            self, 'CloudFrontWWWEditPathForOriginVersion',
+            self, 'CloudFrontEditPathForOriginVersion',
             lambda_=cloud_front_www_edit_path_for_origin_lambda,
             description='Latest Version')
 
@@ -236,7 +235,6 @@ class WebflowAWSStack(core.Stack):
             cloud_front_distribution: aws_cloudfront.Distribution) -> aws_lambda.Function:
         return aws_lambda.Function(
             self, 'S3TriggerLambdaFunction',
-            function_name='s3_trigger_artifacts-upload',
             description='Function responsible of unzipping the zip file uploaded and move the files to the '
                         'correct folder',
             handler='index.handler',
