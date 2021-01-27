@@ -9,7 +9,7 @@ import click
 
 from webflow_aws.utils import configuration_yaml_exists, get_configuration, get_setup_bucket_name, \
     create_cloud_formation_setup_stack
-from webflow_aws.global_variables import aws_region_name, setup_stack_name
+from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
 
 
 def check_if_configuration_yaml_exists():
@@ -46,7 +46,7 @@ def publish():
     configuration = get_configuration()
     session = boto3.session.Session(
         profile_name=configuration.get('aws_profile_name', 'default'),
-        region_name=aws_region_name)
+        region_name=AWS_REGION_NAME)
     # nano cdk.json
     with open('cdk.json', 'w') as outfile:
         json.dump({'app': 'python3 app.py'}, outfile)
@@ -72,20 +72,20 @@ def setup():
     configuration = get_configuration()
     session = boto3.session.Session(
         profile_name=configuration.get('aws_profile_name', 'default'),
-        region_name=aws_region_name)
+        region_name=AWS_REGION_NAME)
     cloudformation_client = session.client(service_name='cloudformation')
     click.echo('Going to create all the needed resources.')
     # check if the setup stack is already created
     response = cloudformation_client.describe_stacks()
     already_created_stack = [
         stack_info for stack_info in response.get('Stacks', [])
-        if stack_info.get('StackName', '') == setup_stack_name]
+        if stack_info.get('StackName', '') == SETUP_STACK_NAME]
     setup_bucket_name = get_setup_bucket_name(
-        aws_region_name=aws_region_name, aws_profile_name=configuration.get('aws_profile_name', 'default'))
+        aws_region_name=AWS_REGION_NAME, aws_profile_name=configuration.get('aws_profile_name', 'default'))
     if not already_created_stack:
         stack_id = create_cloud_formation_setup_stack(
-            aws_profile_name=configuration.get('aws_profile_name', 'default'), aws_region_name=aws_region_name,
-            setup_stack_name=setup_stack_name, setup_bucket_name=setup_bucket_name)
+            aws_profile_name=configuration.get('aws_profile_name', 'default'), aws_region_name=AWS_REGION_NAME,
+            setup_stack_name=SETUP_STACK_NAME, setup_bucket_name=setup_bucket_name)
         while True:
             response = cloudformation_client.describe_stacks(StackName=stack_id)
             if response['Stacks'][0]['StackStatus'] in ['CREATE_IN_PROGRESS']:

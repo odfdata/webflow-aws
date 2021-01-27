@@ -1,2 +1,2 @@
-aws_region_name = 'us-east-1'
-setup_stack_name = 'webflow-aws-setup'
+AWS_REGION_NAME = 'us-east-1'
+SETUP_STACK_NAME = 'webflow-aws-setup'
