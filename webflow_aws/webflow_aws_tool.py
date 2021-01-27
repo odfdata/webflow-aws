@@ -8,7 +8,7 @@ import boto3
 import click
 
 from webflow_aws.utils import configuration_yaml_exists, get_configuration, get_setup_bucket_name, \
-    create_cloud_formation_setup_stack
+    create_cloud_formation_setup_stack, check_cloud_formation_setup_stack_creation
 from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
 
 
@@ -86,20 +86,10 @@ def setup():
         stack_id = create_cloud_formation_setup_stack(
             aws_profile_name=configuration.get('aws_profile_name', 'default'), aws_region_name=AWS_REGION_NAME,
             setup_stack_name=SETUP_STACK_NAME, setup_bucket_name=setup_bucket_name)
-        while True:
-            response = cloudformation_client.describe_stacks(StackName=stack_id)
-            if response['Stacks'][0]['StackStatus'] in ['CREATE_IN_PROGRESS']:
-                timeout = 5
-                while timeout > 0:
-                    click.echo('.', nl=False)
-                    sleep(0.5)
-                    timeout = timeout - 0.5
-            elif response['Stacks'][0]['StackStatus'] in ['CREATE_FAILED']:
-                click.echo('Error creating the support stack', err=True)
-                return
-            elif response['Stacks'][0]['StackStatus'] in ['CREATE_COMPLETE']:
-                click.echo('')
-                break
+        if not check_cloud_formation_setup_stack_creation(
+                aws_profile_name=configuration.get('aws_profile_name', 'default'), aws_region_name=AWS_REGION_NAME,
+                stack_id=stack_id):
+            return
         click.echo('Stack successfully created')
     # going to upload all the needed lambda functions
     s3_resource = session.resource(service_name='s3')
