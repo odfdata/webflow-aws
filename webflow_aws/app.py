@@ -2,9 +2,8 @@ import boto3
 from aws_cdk import core
 
 from webflow_aws.create_cloudformation_template import WebflowAWSStack
+from webflow_aws.global_variables import aws_region_name
 from webflow_aws.utils import get_configuration, configuration_yaml_exists, setup_bucket_exists
-
-aws_region_name = 'us-east-1'
 
 
 if __name__ == '__main__':
