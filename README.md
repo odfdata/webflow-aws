@@ -1,10 +1,14 @@
 # webflow-aws
-Python code to deploy your [Webflow](https://webflow.com/) static website in AWS using Cloud Formation.
+An out-of-the box tool written in Python to deploy your [Webflow](https://webflow.com/) static website on AWS with a serverless architecture.
+
+This tool uses the power of Cloud Formation to let you have your website up in minutes, with CDN and SSL Certificate enabled.
+
+You can manage up to an infinite number of websites in the same AWS account, paying only for the real traffic. That's the beautiful part of serverless 😉
 
 | :point_up:    | In this version, everything needs to be hosted in AWS, also your domain. |
 |---------------|:-------------------------------------------------------------------------|
 
-## Setup
+## Installation
 
 
 ### Prerequisites
@@ -60,10 +64,21 @@ webflow-aws --help
 
 ## Deploy your website
 
-Finally, you are ready to go to **Webflow** and download your `.zip` file 
-([click here](https://university.webflow.com/lesson/code-export) to see the guide on how to download it).
+You are now ready to deploy your website. Start by going to **Webflow** and download your created website as a `.zip` file 
+([click here](https://university.webflow.com/lesson/code-export) to see a detailed guide on how to do it).
 
-Once you downloaded it, create a folder and put the `.zip` file inside. The folder's name doesn't matter.
+Once you downloaded it, create a folder and put the `.zip` file inside. The folder's name doesn't matter, but make it meaningful for you. In our guide we will use the `example-website` folder
+
+### Set up DNS record
+
+Once your website is deployed, you will need a DNS Record to point to the file location. With `webflow-aws` you can do that in two ways:
+
+* create a **hosted zone inside Route53** ([guide](https://medium.com/@dbclin/amazon-route-53-and-dns-whats-in-a-name-28fa4ac2826c)) on the AWS account you're using to deploy the website. In this scenario `webflow-aws` automatically manages the creation of all needed configuration, both for DNS Records and for SSL Certificate verification. 
+* **[beta]** use a **custom DNS manager**, such as GoDaddy or your domain registrant. In this scenario, do not configure Route 53 properties and, once website is published, instructions with CNAMEs to set will be shown to you, so that you can manually configure them. Moreover, during first website deployment, you will need to publish a TXT record to verify your SSL Certificate.
+
+With `webflow-aws` you can have one or more sub-domain point at your website, such as `example.com` and `www.example.com`.
+
+In the `webflow-aws-config.yaml` file you will need to set the list of domains you would like to have your website pointing at. For example, you can have `example.com` and `www.example.com` enabled.
 
 ### Create webflow-aws-config.yaml file
 
@@ -90,9 +105,9 @@ support_stack_name: "WebflowAWSSupport"
 - **bucket_name**: the AWS S3 bucket name you want to create. In most of the cases, it's equal to the domain name.
 - **domain_name**: the domain name you want to use to expose your website.
 - **CNAMEs**: the list of alternative domain names you want to redirect to the domain name.
-- **route_53_hosted_zone_id**: the AWS Route53 hosted zone created. This is the 
-  [guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html) you can follow to create a
-  new Route53 hosted zone and get his `id`.
+- **route_53_hosted_zone_id**: the AWS Route53 hosted zone created. This  
+  [guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html) shows how to create a
+  new hosted zone and get his `id`.
 - **route_53_hosted_zone_name**: the AWS Route53 hosted zone domain name.
 - **stack_name**: the name of the stack which all the resources will be grouped in. In most of the cases, it's the
   domain name without dots `.`
@@ -104,9 +119,9 @@ support_stack_name: "WebflowAWSSupport"
 - **support_bucket_name**: (optional) the AWS S3 bucket name created as support resource.
 - **support_stack_name**: (optional) the AWS CloudFormation Stack name which all the resources will be grouped in.
 
-Place this file inside the `websites/` folder previously created. The content of that folder should be
+Place this file inside the `example-website/` folder previously created. The content of that folder should be
 ```bash
-|—— www.example.com
+|—— example-website
 |    |—— weblfow-files.zip
 |    |—— configuration.yaml
 ```
