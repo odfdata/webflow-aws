@@ -37,9 +37,8 @@ def create_config():
         return
 
     # ask for elements
-    config_maker = ConfigMaker(load_configuration=config_exists)
-    config_maker.ask_cnames()
-    # ask if the user has route53 and, if so, add params
+    config_maker = ConfigMaker()
+    config_maker.ask()
     config_maker.write_config()
 
 
