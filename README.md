@@ -106,7 +106,7 @@ support_stack_name: "WebflowAWSSupport"
 
 Place this file inside the `websites/` folder previously created. The content of that folder should be
 ```bash
-|—— websites
+|—— www.example.com
 |    |—— weblfow-files.zip
 |    |—— configuration.yaml
 ```
