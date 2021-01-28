@@ -8,12 +8,26 @@ from webflow_aws.utils.base_utils import get_configuration, configuration_yaml_e
 
 
 class ConfigMaker(object):
+    """
+    USed to create / edit .yaml configuration file for a specific website.
+
+    Attributes:
+        domain_name: str                The main domain connected to this project
+        CNAMEs: list                    List of CNAMEs of this project
+        route_53_hosted_zone_id: str    id of route53 hosted zone
+        route_53_hosted_zone_name: str  name of the route53 hosted zone
+        aws_profile_name: str           name of the internal aws profile to be used for deploy
+        bucket_name: str                name of the bucket where to deploy static files
+        stack_name: str                 name of the Cloudformation Stack that handles this project
+        setup_bucket_name: str          name of the bucket where to store setup files
+        setup_stack_name: str           name of the Cloudformation stack that handles the setup part
+    """
 
     def __init__(self):
         # default values are set at the end of ask() process if they have not been asked to user or are not in
         # a pre-existing configuration file
-        self.CNAMEs: List = []
         self.domain_name: str = ""
+        self.CNAMEs: List = []
         self.route_53_hosted_zone_id: Optional[str] = None
         self.route_53_hosted_zone_name: Optional[str] = None
         self.aws_profile_name: str = "default"
@@ -29,7 +43,7 @@ class ConfigMaker(object):
 
     def _load_config(self):
         """
-        Loads the configuration and stores the values inside this class
+        Loads the configuration (if present) and stores the values inside this class
         :return:
         """
         if configuration_yaml_exists():
@@ -49,19 +63,19 @@ class ConfigMaker(object):
 
     def _ask_domain_and_cnames(self):
         """
-        Asks for domain name and cnames to the final user
+        Asks for domain name and cnames to the user
         :return:
         """
         # get domain name
-        user_input = click.prompt(f"Principal domain name to use with your website, "
-                                  f"like example.com",
+        user_input = click.prompt(f"Principal {click.style('domain name', bold=True, underline=True)}"
+                                  f" to use with your website, like example.com",
                                   default=self.domain_name if len(self.domain_name) > 0 else None,
                                   type=str)
         self.domain_name = user_input.lower()
 
         # get domain names, if user would like to
         resp = click.confirm(f"Do you want to add other domain names, such as www.example.com "
-                             f"or test.example.com?")
+                             f"or test.example.com?", default=len(self.CNAMEs) > 0)
         if resp:
             incorrect = True
             while incorrect:
@@ -78,15 +92,18 @@ class ConfigMaker(object):
 
     def _ask_route53(self):
         """
-        Asks if the user would like to configure route53 or use custom DNS manager
+        Asks to user if he'd like to configure route53 or use custom DNS manager
         :return:
         """
         # ask if user would like to add route53 as manager
         # get domain names, if user would like to
-        resp = click.confirm(f"You can either choose to use Route53 to manage your DNS (you need to have "
-                             f"a hosted zone already configured) or to use your custom DNS Manager (at the "
+        resp = click.confirm(f"You can either choose to use {click.style('Route53', bold=True, underline=True)} "
+                             f"to manage your DNS (you need to have a hosted zone already configured) or to use your "
+                             f"{click.style('custom DNS Manager', bold=True, underline=True)} (at the "
                              f"end of setup you will need to add few CNAMEs)\n"
-                             f"Would you like to use Route53 as DNS Manager?")
+                             f"Would you like to use {click.style('Route53', bold=True, underline=True)} as DNS Manager?",
+                             default=self.route_53_hosted_zone_id)
+        self._route53_zone_added = resp
         if resp:
             user_input = click.prompt(f"Enter your Route53 Hosted Zone ID",
                                       default=self.route_53_hosted_zone_id if self.route_53_hosted_zone_id and len(
@@ -100,10 +117,15 @@ class ConfigMaker(object):
             self.route_53_hosted_zone_name = user_input
 
     def _ask_profile_name(self):
+        """
+        Ask final user for the aws profile name choosing between those available
+        :return:
+        """
         not_confirmed = True
         while not_confirmed:
             aws_profiles = boto3.session.Session().available_profiles
-            user_input = click.prompt(f"Which aws profile would you like to use for deploy?",
+            user_input = click.prompt(f"Which {click.style('aws profile', bold=True, underline=True)} "
+                                      f"would you like to use for deploy?",
                                       default=self.aws_profile_name if len(
                                           self.aws_profile_name) > 0 and self.aws_profile_name in aws_profiles else None,
                                       type=click.Choice(aws_profiles))
@@ -111,16 +133,19 @@ class ConfigMaker(object):
             profle_data = boto3_session.client('sts').get_caller_identity()
             aws_account_id = profle_data.get('Account')
             aws_user_arn = profle_data.get('Arn')
-            resp = click.confirm(f"  Confirm profile {user_input} for account {aws_account_id} "
-                                 f"(user ARN {aws_user_arn})?", default=True)
+            resp = click.confirm(f"  Confirm profile {click.style(user_input, bold=True)} "
+                                 f"for account {click.style(aws_account_id, bold=True)} "
+                                 f"(user ARN {click.style(aws_user_arn, bold=True)})?", default=True)
             not_confirmed = not resp
         self.aws_profile_name = user_input
 
     def ask(self):
         """
-        Does all the asks in the correct order to get all the information and fill the correct configuration
+        Asks for all the basic information to the user in order to create the correct configuration .yaml file
         :return:
         """
+        click.echo("")
+        click.echo(click.style("CREATE A NEW CONFIGURATION FILE", fg="green", underline=True))
         self._ask_domain_and_cnames()
         click.echo("")
         self._ask_route53()
