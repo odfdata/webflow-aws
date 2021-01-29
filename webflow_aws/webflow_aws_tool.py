@@ -2,14 +2,13 @@ import glob
 import json
 import os
 import shutil
-from time import sleep
 
 import boto3
 import click
 
+from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
 from webflow_aws.utils import configuration_yaml_exists, get_configuration, get_setup_bucket_name, \
     create_cloud_formation_setup_stack, check_cloud_formation_setup_stack_creation
-from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
 
 
 def check_if_configuration_yaml_exists():
