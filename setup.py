@@ -10,7 +10,7 @@ setup(
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
     author='CreateInCloud',
-    author_email='help@createin.cloud',
+    author_email='it@createin.cloud',
     url='https://github.com/CreateInCloud/webflow-aws',
     packages=find_packages(),
     python_requires='>=3.6',
