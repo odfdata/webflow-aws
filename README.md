@@ -124,9 +124,8 @@ If you want to create the configuration file on your own, this is an example fil
 ```yaml
 # REQUIRED parameters
 bucket_name: "www.example.com"
-domain_name: "www.example.com"
+domain_name: "example.com"
 CNAMEs:
-  - "example.com"
   - "www.example.com"
 route_53_hosted_zone_id: "Z05234556KK8DIAQM"
 route_53_hosted_zone_name: "example.com"
