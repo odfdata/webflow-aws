@@ -42,7 +42,7 @@ class WebflowAWSStack(core.Stack):
         cloud_front_www = self.__create_cloud_front_www(
             origin_bucket_name=configuration['bucket_name'], cache_policy=cloud_front_cache_policy,
             origin_access_identity=cloud_front_origin_access_identity, ssl_certificate=ssl_certificate,
-            domain_names=configuration['CNAMEs'],
+            domain_name=configuration['domain_name'], alternative_domain_names=configuration['CNAMEs'],
             edge_lambda_viewer_request=cloud_front_www_edit_path_for_origin_lambda_version)
         s3_trigger_lambda_execution_role = self.__create_s3_trigger_lambda_execution_role(
             bucket_name=configuration['bucket_name'], cloudfront_distribution=cloud_front_www)
@@ -85,16 +85,19 @@ class WebflowAWSStack(core.Stack):
         return role
 
     def __create_cloud_front_www(
-            self, origin_bucket_name: str, domain_names: Optional[List[str]],
+            self, origin_bucket_name: str, domain_name: str, alternative_domain_names: Optional[List[str]],
             ssl_certificate: aws_certificatemanager.Certificate,
             cache_policy: aws_cloudfront.CachePolicy, origin_access_identity: aws_cloudfront.OriginAccessIdentity,
             edge_lambda_viewer_request: aws_lambda.Version) -> aws_cloudfront.Distribution:
+        domain_names = alternative_domain_names if alternative_domain_names else []
+        domain_names.append(domain_name)
+        domain_names = set(domain_names)
         return aws_cloudfront.Distribution(
             self, 'CloudFrontWWW',
             enabled=True,
             certificate=ssl_certificate,
             comment='CloudFront Distribution for your WWW static website',
-            domain_names=domain_names,
+            domain_names=list(domain_names),
             http_version=HttpVersion.HTTP2,
             price_class=PriceClass.PRICE_CLASS_100,
             default_behavior=BehaviorOptions(
