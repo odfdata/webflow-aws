@@ -27,9 +27,26 @@ def cli():
     pass
 
 
-@cli.command(short_help='Create the configuration.yaml file')
+@cli.command(short_help='Create the webflow-aws-config.yaml file')
 def create_config():
-    click.echo('Feature release')
+    """
+    Creates the configuration file. If a file is already present, asks the user if he'd like to overwrite it or keep
+    the current configuration.
+    :return:
+    """
+    # check if configuration is not already present. In case it's present, ask the user confirmation to edit.
+    config_exists = configuration_yaml_exists()
+    if config_exists:
+        proceed = click.confirm('A configuration file already exists. Would you like to overwrite it?')
+    else:
+        proceed = True
+    if not proceed:
+        return
+
+    # ask for elements
+    config_maker = ConfigMaker()
+    config_maker.ask()
+    config_maker.write_config()
 
 
 @cli.command(short_help="Publish your website in production")
