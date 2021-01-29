@@ -3,10 +3,13 @@ import json
 import os
 import shutil
 
+import emoji as emoji
+import pip
+
 import boto3
 import click
 
-from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
+from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME, GITHUB_REPOSITORY_URL
 from webflow_aws.utils.base_utils import configuration_yaml_exists, get_configuration, get_setup_bucket_name, \
     create_cloud_formation_setup_stack, check_cloud_formation_setup_stack_creation
 from webflow_aws.utils.config_maker import ConfigMaker
@@ -69,7 +72,13 @@ def publish(ctx):
         Bucket=configuration['bucket_name'],
         Filename=zip_files[0],
         Key=f'artifacts/prod/package.zip')
-    click.echo('Upload completed')
+    click.echo('')
+    click.echo('------------------------------------------------------------------------------------------------')
+    click.echo('')
+    click.echo(
+        f'You website has been published and you can visit it on https://{configuration["domain_name"]}. '
+        f'Thanks for using webflow-aws!\n'
+        f'If you find our project useful, please {emoji.emojize(":star:")} us on github {GITHUB_REPOSITORY_URL}')
 
 
 @cli.command(short_help='Create all the needed resources to publish your website')

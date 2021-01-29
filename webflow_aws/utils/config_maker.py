@@ -98,24 +98,29 @@ class ConfigMaker(object):
         """
         # ask if user would like to add route53 as manager
         # get domain names, if user would like to
-        resp = click.confirm(f"You can either choose to use {click.style('Route53', bold=True, underline=True)} "
-                             f"to manage your DNS (you need to have a hosted zone already configured) or to use your "
-                             f"{click.style('custom DNS Manager', bold=True, underline=True)} (at the "
-                             f"end of setup you will need to add few CNAMEs)\n"
-                             f"Would you like to use {click.style('Route53', bold=True, underline=True)} as DNS Manager?",
-                             default=self.route_53_hosted_zone_id)
-        self._route53_zone_added = resp
-        if resp:
-            user_input = click.prompt(f"Enter your Route53 Hosted Zone ID",
-                                      default=self.route_53_hosted_zone_id if self.route_53_hosted_zone_id and len(
-                                          self.route_53_hosted_zone_id) > 0 else None,
-                                      type=str)
-            self.route_53_hosted_zone_id = user_input
-            user_input = click.prompt(f"Finally, your Route53 Hosted Zone Name",
-                                      default=self.route_53_hosted_zone_name if self.route_53_hosted_zone_name and len(
-                                          self.route_53_hosted_zone_name) > 0 else None,
-                                      type=str)
-            self.route_53_hosted_zone_name = user_input
+        click.echo(
+            f"You have to use {click.style('Route53', bold=True, underline=True)} to manage your DNS "
+            f"(you need to have a hosted zone already configured).")
+        # resp = click.confirm(
+        #     f"You can either choose to use {click.style('Route53', bold=True, underline=True)} "
+        #     f"to manage your DNS (you need to have a hosted zone already configured) or to use your "
+        #     f"{click.style('custom DNS Manager', bold=True, underline=True)} (at the "
+        #     f"end of setup you will need to add few CNAMEs)\n"
+        #     f"Would you like to use {click.style('Route53', bold=True, underline=True)} as DNS Manager?",
+        #     default=True)
+        # default=self.route_53_hosted_zone_id)
+        # self._route53_zone_added = resp
+        # if resp:
+        user_input = click.prompt(f"Enter your Route53 Hosted Zone ID",
+                                  default=self.route_53_hosted_zone_id if self.route_53_hosted_zone_id and len(
+                                      self.route_53_hosted_zone_id) > 0 else None,
+                                  type=str)
+        self.route_53_hosted_zone_id = user_input
+        user_input = click.prompt(f"Finally, your Route53 Hosted Zone Name",
+                                  default=self.route_53_hosted_zone_name if self.route_53_hosted_zone_name and len(
+                                      self.route_53_hosted_zone_name) > 0 else None,
+                                  type=str)
+        self.route_53_hosted_zone_name = user_input
 
     def _ask_profile_name(self):
         """

@@ -106,15 +106,26 @@ In the `webflow-aws-config.yaml` file you will need to set the list of domains y
 
 ### Create webflow-aws-config.yaml file
 
-The `webflow-aws-config.yaml` file allows you to customize the website you want to publish online. This is an example
-file you can customize:
+The `webflow-aws-config.yaml` file allows you to customize the website you want to publish online. To create it, you
+have to run this command:
+
+```bash
+webflow-aws create-config
+```
+
+It will guide you through the creation of the configuration. At the end of this procedure, you will see the
+`webflow-aws-config.yaml` in your current directory.
+
+
+#### Advanced creation
+
+If you want to create the configuration file on your own, this is an example file you can customize:
 
 ```yaml
 # REQUIRED parameters
 bucket_name: "www.example.com"
-domain_name: "www.example.com"
+domain_name: "example.com"
 CNAMEs:
-  - "example.com"
   - "www.example.com"
 route_53_hosted_zone_id: "Z05234556KK8DIAQM"
 route_53_hosted_zone_name: "example.com"
@@ -134,7 +145,7 @@ aws_profile_name: "default"
 - **stack_name**: the name of the stack which all the resources will be grouped in. In most of the cases, it's the
   domain name without dots `.`
   
-#### Optional Parameters
+##### Optional Parameters
 
 - **aws_profile_name**: (optional) the AWS profile name configured in AWS CLI. If you didn't specify it,
   the profile name is `default`
@@ -144,7 +155,7 @@ Place this file inside the `example-website/` folder previously created. The con
 ```bash
 |—— example-website
 |    |—— weblfow-files.zip
-|    |—— configuration.yaml
+|    |—— webflow-aws-config.yaml
 ```
 
 ### Publish your website
@@ -169,8 +180,3 @@ webflow-aws publish
 ```
 
 In 2 minutes, the content will be public available under the specified **domain names**.
-  
-## Next releases
-
-We are planning to create the `webflow-aws create-config` command to guide the user through the creation of the 
-configuration file setting all the customizable parameters without having him to create his own file.
