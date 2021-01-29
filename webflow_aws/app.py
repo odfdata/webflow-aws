@@ -3,7 +3,7 @@ from aws_cdk import core
 
 from webflow_aws.create_cloudformation_template import WebflowAWSStack
 from webflow_aws.global_variables import AWS_REGION_NAME
-from webflow_aws.utils import get_configuration, configuration_yaml_exists, setup_bucket_exists
+from webflow_aws.utils.base_utils import get_configuration, configuration_yaml_exists, setup_bucket_exists
 
 
 if __name__ == '__main__':
