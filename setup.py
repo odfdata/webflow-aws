@@ -18,7 +18,7 @@ setup(
     include_package_data=True,
     license="Apache License 2.0",
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Natural Language :: English',
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.6',
