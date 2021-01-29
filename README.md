@@ -122,8 +122,6 @@ stack_name: "WwwExampleComStack"
 
 # OPTIONAL parameters
 aws_profile_name: "default"
-support_bucket_name: "webflow-aws-support" 
-support_stack_name: "WebflowAWSSupport"
 ```
 
 - **bucket_name**: the AWS S3 bucket name you want to create. In most of the cases, it's equal to the domain name.
@@ -140,10 +138,9 @@ support_stack_name: "WebflowAWSSupport"
 
 - **aws_profile_name**: (optional) the AWS profile name configured in AWS CLI. If you didn't specify it,
   the profile name is `default`
-- **support_bucket_name**: (optional) the AWS S3 bucket name created as support resource.
-- **support_stack_name**: (optional) the AWS CloudFormation Stack name which all the resources will be grouped in.
 
 Place this file inside the `example-website/` folder previously created. The content of that folder should be
+
 ```bash
 |—— example-website
 |    |—— weblfow-files.zip
