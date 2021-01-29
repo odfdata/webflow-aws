@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from time import sleep
 from typing import Dict
 
@@ -46,7 +47,7 @@ def create_cloud_formation_setup_stack(
     # create the support stack and wait for the creation complete
     cloudformation_client = get_boto3_session(
         aws_profile_name=aws_profile_name, aws_region_name=aws_region_name).client(service_name='cloudformation')
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/templates/template_setup.yaml') as f:
+    with open(Path(__file__).absolute().parent.parent.__str__() + '/templates/template_setup.yaml') as f:
         template_setup = f.read()
     response = cloudformation_client.create_stack(
         StackName=setup_stack_name,
