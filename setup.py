@@ -8,6 +8,7 @@ setup(
     version='0.0.1',
     description='Deploy your Webflow static website on AWS',
     long_description=open('README.md').read(),
+    long_description_content_type="text/markdown",
     author='CreateInCloud',
     author_email='help@createin.cloud',
     url='https://github.com/CreateInCloud/webflow-aws',

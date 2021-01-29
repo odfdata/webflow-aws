@@ -1,11 +1,14 @@
 # webflow-aws
-Python code to deploy your [Webflow](https://webflow.com/) static website in AWS using Cloud Formation.
+An out-of-the box tool written in Python to deploy your [Webflow](https://webflow.com/) static website on AWS with a serverless architecture.
+
+This tool uses the power of Cloud Formation to let you have your website up in minutes, with CDN and SSL Certificate enabled.
+
+You can manage up to an infinite number of websites in the same AWS account, paying only for the real traffic. That's the beautiful part of serverless 😉
 
 | :point_up:    | In this version, everything needs to be hosted in AWS, also your domain. |
 |---------------|:-------------------------------------------------------------------------|
 
-## Setup
-
+## Getting Started
 
 ### Prerequisites
 
@@ -22,7 +25,20 @@ Finally, install the [AWS CDK command line tool](https://aws.amazon.com/cdk/?nc1
 npm install -g aws-cdk
 ```
 
-### Clone repo & build your package
+### Installation
+
+You can download and install the latest version of this tool from the Python package index ([Pypi](https://pypi.org)) 
+as follows:
+
+```bash
+pip3 install --upgrade webflow-aws
+```
+
+#### Advanced Installation
+
+This section explains how build and install the Python package using the source code.
+
+##### Clone repo & build your package
 
 To use our tool, you have to clone this repository and install:
 
@@ -42,14 +58,26 @@ cd webflow-aws
 python3 setup.py sdist bdist_wheel
 ```
 
-### Install the package
+##### Install the package
 
 The build file (generate above) will be visible in the `dist/` folder. You will have a `wheel` and `tar.gz` file. 
-Without renaming them, you can install our tool on any computer with the following command
+If you previously installed another version of `webflow-aws`, it's recommended to uninstall it running the following
+command:
 
 ```bash
-pip3 install dist/webflow_aws-0.0.1-py3-none-any.whl
+pip3 uninstall dist/webflow_aws-{version}-py3-none-any.whl
 ```
+
+Now you're ready to install the package inside the `dist/`folder. Without renaming them, you can install our tool on 
+any computer with the following command
+
+```bash
+pip3 install dist/webflow_aws-{version}-py3-none-any.whl
+```
+
+You can find the `{version}` inside the `setup.py` file.
+
+### Check if everything is working
 
 At this point, on your target machine, you will be able to use the tool by typing `webflow-aws` from any folder. To see
 the available commands, and check if it's correctly installed, run the following command
@@ -60,18 +88,29 @@ webflow-aws --help
 
 ## Deploy your website
 
-Finally, you are ready to go to **Webflow** and download your `.zip` file 
-([click here](https://university.webflow.com/lesson/code-export) to see the guide on how to download it).
+You are now ready to deploy your website. Start by going to **Webflow** and download your created website as a `.zip` file 
+([click here](https://university.webflow.com/lesson/code-export) to see a detailed guide on how to do it).
 
-Once you downloaded it, create a folder and put the `.zip` file inside. The folder's name doesn't matter.
+Once you downloaded it, create a folder and put the `.zip` file inside. The folder's name doesn't matter, but make it meaningful for you. In our guide we will use the `example-website` folder
+
+### Set up DNS record
+
+Once your website is deployed, you will need a DNS Record to point to the file location. With `webflow-aws` you can do that in two ways:
+
+* create a **hosted zone inside Route53** ([guide](https://medium.com/@dbclin/amazon-route-53-and-dns-whats-in-a-name-28fa4ac2826c)) on the AWS account you're using to deploy the website. In this scenario `webflow-aws` automatically manages the creation of all needed configuration, both for DNS Records and for SSL Certificate verification. 
+* **[beta]** use a **custom DNS manager**, such as GoDaddy or your domain registrant. In this scenario, do not configure Route 53 properties and, once website is published, instructions with CNAMEs to set will be shown to you, so that you can manually configure them. Moreover, during first website deployment, you will need to publish a TXT record to verify your SSL Certificate.
+
+With `webflow-aws` you can have one or more sub-domain point at your website, such as `example.com` and `www.example.com`.
+
+In the `webflow-aws-config.yaml` file you will need to set the list of domains you would like to have your website pointing at. For example, you can have `example.com` and `www.example.com` enabled.
 
 ### Create webflow-aws-config.yaml file
 
-The webflow-aws-config.yaml file allows you to customize the website you want to publish online. This is an example
+The `webflow-aws-config.yaml` file allows you to customize the website you want to publish online. This is an example
 file you can customize:
 
 ```yaml
-# these are the required parameters
+# REQUIRED parameters
 bucket_name: "www.example.com"
 domain_name: "www.example.com"
 CNAMEs:
@@ -80,18 +119,17 @@ CNAMEs:
 route_53_hosted_zone_id: "Z05234556KK8DIAQM"
 route_53_hosted_zone_name: "example.com"
 stack_name: "WwwExampleComStack"
-# these are the optional parameters
+
+# OPTIONAL parameters
 aws_profile_name: "default"
-support_bucket_name: "webflow-aws-support" 
-support_stack_name: "WebflowAWSSupport"
 ```
 
 - **bucket_name**: the AWS S3 bucket name you want to create. In most of the cases, it's equal to the domain name.
 - **domain_name**: the domain name you want to use to expose your website.
 - **CNAMEs**: the list of alternative domain names you want to redirect to the domain name.
-- **route_53_hosted_zone_id**: the AWS Route53 hosted zone created. This is the 
-  [guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html) you can follow to create a
-  new Route53 hosted zone and get his `id`.
+- **route_53_hosted_zone_id**: the AWS Route53 hosted zone created. This  
+  [guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html) shows how to create a
+  new hosted zone and get his `id`.
 - **route_53_hosted_zone_name**: the AWS Route53 hosted zone domain name.
 - **stack_name**: the name of the stack which all the resources will be grouped in. In most of the cases, it's the
   domain name without dots `.`
@@ -100,12 +138,11 @@ support_stack_name: "WebflowAWSSupport"
 
 - **aws_profile_name**: (optional) the AWS profile name configured in AWS CLI. If you didn't specify it,
   the profile name is `default`
-- **support_bucket_name**: (optional) the AWS S3 bucket name created as support resource.
-- **support_stack_name**: (optional) the AWS CloudFormation Stack name which all the resources will be grouped in.
 
-Place this file inside the `websites/` folder previously created. The content of that folder should be
+Place this file inside the `example-website/` folder previously created. The content of that folder should be
+
 ```bash
-|—— websites
+|—— example-website
 |    |—— weblfow-files.zip
 |    |—— configuration.yaml
 ```
@@ -135,14 +172,5 @@ In 2 minutes, the content will be public available under the specified **domain 
   
 ## Next releases
 
-We are planning to release this tool under [Pypi](https://pypi.org/) so the user will be able to install it running
-the command:
-
-```bash
-pip3 install webflow-aws
-```
-
-We are also planning to create the `webflow-aws create-config` command to guide the user through the creation of the configuration
-file setting all the customizable parameters without having him to create his own file.
-The other release planned is the improvement of the `webflow-aws setup` command: we will integrate the **cdk deploy**
-command inside it.
+We are planning to create the `webflow-aws create-config` command to guide the user through the creation of the 
+configuration file setting all the customizable parameters without having him to create his own file.

@@ -42,7 +42,7 @@ class WebflowAWSStack(core.Stack):
         cloud_front_www = self.__create_cloud_front_www(
             origin_bucket_name=configuration['bucket_name'], cache_policy=cloud_front_cache_policy,
             origin_access_identity=cloud_front_origin_access_identity, ssl_certificate=ssl_certificate,
-            domain_names=configuration['CNAMEs'],
+            domain_name=configuration['domain_name'], alternative_domain_names=configuration['CNAMEs'],
             edge_lambda_viewer_request=cloud_front_www_edit_path_for_origin_lambda_version)
         s3_trigger_lambda_execution_role = self.__create_s3_trigger_lambda_execution_role(
             bucket_name=configuration['bucket_name'], cloudfront_distribution=cloud_front_www)
@@ -56,9 +56,9 @@ class WebflowAWSStack(core.Stack):
         self.__create_s3_source_bucket_policy(
             s3_source_bucket=s3_source_bucket, cloud_front_origin_access_identity=cloud_front_origin_access_identity)
         self.__create_route_53_record_group(
-            route_53_hosted_zone=route_53_hosted_zone,
-            domain_names=configuration['CNAMEs'], cloud_front_distribution=cloud_front_www)
-        self.__create_cloud_front_www_output(cloud_front_www=cloud_front_www)
+            route_53_hosted_zone=route_53_hosted_zone, domain_name=configuration['domain_name'],
+            alternative_domain_names=configuration['CNAMEs'], cloud_front_distribution=cloud_front_www)
+        # self.__create_cloud_front_www_output(cloud_front_www=cloud_front_www)
 
     def __create_cloud_front_cache_policy(self) -> aws_cloudfront.CachePolicy:
         return aws_cloudfront.CachePolicy(
@@ -66,8 +66,8 @@ class WebflowAWSStack(core.Stack):
             comment='The CloudFront cache policy used by the DefaultCacheBehavior',
             default_ttl=Duration.seconds(1),
             max_ttl=Duration.seconds(1),
-            min_ttl=Duration.seconds(1),
-            cache_policy_name='CloudFrontWWWCachePolicy')
+            min_ttl=Duration.seconds(1)
+        )
 
     def __create_cloud_front_origin_access_identity(self) -> aws_cloudfront.OriginAccessIdentity:
         return aws_cloudfront.OriginAccessIdentity(
@@ -85,16 +85,19 @@ class WebflowAWSStack(core.Stack):
         return role
 
     def __create_cloud_front_www(
-            self, origin_bucket_name: str, domain_names: Optional[List[str]],
+            self, origin_bucket_name: str, domain_name: str, alternative_domain_names: Optional[List[str]],
             ssl_certificate: aws_certificatemanager.Certificate,
             cache_policy: aws_cloudfront.CachePolicy, origin_access_identity: aws_cloudfront.OriginAccessIdentity,
             edge_lambda_viewer_request: aws_lambda.Version) -> aws_cloudfront.Distribution:
+        domain_names = alternative_domain_names if alternative_domain_names else []
+        domain_names.append(domain_name)
+        domain_names = set(domain_names)
         return aws_cloudfront.Distribution(
             self, 'CloudFrontWWW',
             enabled=True,
             certificate=ssl_certificate,
             comment='CloudFront Distribution for your WWW static website',
-            domain_names=domain_names,
+            domain_names=list(domain_names),
             http_version=HttpVersion.HTTP2,
             price_class=PriceClass.PRICE_CLASS_100,
             default_behavior=BehaviorOptions(
@@ -124,8 +127,7 @@ class WebflowAWSStack(core.Stack):
     def __create_cloud_front_www_edit_path_for_origin_lambda(
             self, webflow_aws_setup_bucket: str, lambda_execution_role: aws_iam.Role) -> aws_lambda.Function:
         return aws_lambda.Function(
-            self, 'CloudFrontWWWEditPathForOrigin',
-            function_name='CloudFront_WWW_editPathForOriginTest',
+            self, 'CloudFrontEditPathForOrigin',
             description='Appends .html extension to universal paths, preserving files with other extensions (ex .css)',
             handler='index.handler',
             runtime=aws_lambda.Runtime.NODEJS_12_X,
@@ -140,7 +142,7 @@ class WebflowAWSStack(core.Stack):
     def __create_cloud_front_www_edit_path_for_origin_lambda_version(
             self, cloud_front_www_edit_path_for_origin_lambda: aws_lambda.Function) -> aws_lambda.Version:
         return aws_lambda.Version(
-            self, 'CloudFrontWWWEditPathForOriginVersion',
+            self, 'CloudFrontEditPathForOriginVersion',
             lambda_=cloud_front_www_edit_path_for_origin_lambda,
             description='Latest Version')
 
@@ -152,8 +154,10 @@ class WebflowAWSStack(core.Stack):
             export_name='ARecord')
 
     def __create_route_53_record_group(
-            self, route_53_hosted_zone: aws_route53.HostedZone, domain_names: List[str],
+            self, route_53_hosted_zone: aws_route53.HostedZone, domain_name: str, alternative_domain_names: List[str],
             cloud_front_distribution: aws_cloudfront.Distribution) -> List[aws_route53.ARecord]:
+        domain_names = alternative_domain_names
+        domain_names.append(domain_name)
         return [
             aws_route53.RecordSet(
                 self, domain_name.replace('.', '').upper(),
@@ -163,7 +167,7 @@ class WebflowAWSStack(core.Stack):
                 target=aws_route53.RecordTarget.from_alias(alias_target=aws_route53_targets.CloudFrontTarget(
                     distribution=cloud_front_distribution
                 ))
-            ) for index, domain_name in enumerate(domain_names)
+            ) for domain_name in set(domain_names)
         ]
 
     def __create_ssl_certificate(
@@ -215,7 +219,6 @@ class WebflowAWSStack(core.Stack):
             assumed_by=ServicePrincipal('lambda.amazonaws.com'),
             description='Execution role that allows the lambda function to get the uploaded zip from S3, upload the '
                         'unpacked one and invalidate the CDN',
-            role_name='S3TriggerLambdaExecutionRole',
             path='/',
             managed_policies=[ManagedPolicy.from_aws_managed_policy_name('service-role/AWSLambdaBasicExecutionRole')],
             inline_policies={
@@ -236,7 +239,6 @@ class WebflowAWSStack(core.Stack):
             cloud_front_distribution: aws_cloudfront.Distribution) -> aws_lambda.Function:
         return aws_lambda.Function(
             self, 'S3TriggerLambdaFunction',
-            function_name='s3_trigger_artifacts-upload',
             description='Function responsible of unzipping the zip file uploaded and move the files to the '
                         'correct folder',
             handler='index.handler',

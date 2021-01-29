@@ -2,15 +2,14 @@ import glob
 import json
 import os
 import shutil
-from time import sleep
 
 import boto3
 import click
 
-from webflow_aws.utils import configuration_yaml_exists, get_configuration, get_setup_bucket_name
-
-
-aws_region_name = 'us-east-1'
+from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
+from webflow_aws.utils.base_utils import configuration_yaml_exists, get_configuration, get_setup_bucket_name, \
+    create_cloud_formation_setup_stack, check_cloud_formation_setup_stack_creation
+from webflow_aws.utils.config_maker import ConfigMaker
 
 
 @click.group()
@@ -20,19 +19,33 @@ def cli():
     pass
 
 
-@cli.command(short_help='Create the configuration.yaml file')
+@cli.command(short_help='Create the webflow-aws-config.yaml file')
 def create_config():
-    click.echo('Feature release')
+    """
+    Creates the configuration file. If a file is already present, asks the user if he'd like to overwrite it or keep
+    the current configuration.
+    """
+    # check if configuration is not already present. In case it's present, ask the user confirmation to edit.
+    config_exists = configuration_yaml_exists()
+    if config_exists:
+        proceed = click.confirm('A configuration file already exists. Would you like to overwrite it?')
+    else:
+        proceed = True
+    if not proceed:
+        return
+
+    # ask for elements
+    config_maker = ConfigMaker()
+    config_maker.ask()
+    config_maker.write_config()
 
 
 @cli.command(short_help="Publish your website in production")
-def publish():
+@click.pass_context
+def publish(ctx):
     # check if the configuration.yaml file exists
     if not configuration_yaml_exists():
-        click.echo(
-            'The webflow-aws-config.yaml file doesn\'t exist. Read the README.md file to see how to create it',
-            err=True)
-        return
+        ctx.forward(create_config)
     # check if there's a .zip file inside the websites folder
     zip_files = glob.glob('./*.zip')
     if not zip_files:
@@ -41,14 +54,14 @@ def publish():
     configuration = get_configuration()
     session = boto3.session.Session(
         profile_name=configuration.get('aws_profile_name', 'default'),
-        region_name=aws_region_name)
+        region_name=AWS_REGION_NAME)
     # nano cdk.json
     with open('cdk.json', 'w') as outfile:
         json.dump({'app': 'python3 app.py'}, outfile)
     # cp app.py .
     dest = shutil.copyfile(os.path.dirname(os.path.abspath(__file__)) + '/app.py', 'app.py')
     # exec cdk deploy
-    os.system(f'cdk deploy --profile {configuration.get("aws_profile_name", "default")} --require-approval never')
+    os.system(f'cdk deploy --profile {configuration["aws_profile_name"]} --require-approval never')
     os.remove('cdk.json')
     os.remove('app.py')
     s3_resource = session.resource(service_name='s3')
@@ -60,55 +73,30 @@ def publish():
 
 
 @cli.command(short_help='Create all the needed resources to publish your website')
-def setup():
+@click.pass_context
+def setup(ctx):
+    # check if the configuration.yaml file exists
     if not configuration_yaml_exists():
-        click.echo(
-            'The webflow-aws-config.yaml file doesn\'t exist. Read the README.md file to see how to create it',
-            err=True)
-        return
+        ctx.forward(create_config)
     configuration = get_configuration()
-    session = boto3.session.Session(
-        profile_name=configuration.get('aws_profile_name', 'default'),
-        region_name=aws_region_name)
+    session = boto3.session.Session(profile_name=configuration['aws_profile_name'], region_name=AWS_REGION_NAME)
     cloudformation_client = session.client(service_name='cloudformation')
     click.echo('Going to create all the needed resources.')
-    # check if the support stack is already created
+    # check if the setup stack is already created
     response = cloudformation_client.describe_stacks()
     already_created_stack = [
         stack_info for stack_info in response.get('Stacks', [])
-        if stack_info.get('StackName', '') == configuration['support_stack_name']]
+        if stack_info.get('StackName', '') == SETUP_STACK_NAME]
     setup_bucket_name = get_setup_bucket_name(
-        aws_region_name=aws_region_name, aws_profile_name=configuration.get('aws_profile_name', 'default'))
+        aws_region_name=AWS_REGION_NAME, aws_profile_name=configuration['aws_profile_name'])
     if not already_created_stack:
-        # create the support stack and wait for the creation complete
-        with open(os.path.dirname(os.path.abspath(__file__)) + '/templates/template_setup.yaml') as f:
-            template_setup = f.read()
-
-        response = cloudformation_client.create_stack(
-            StackName=configuration['support_stack_name'],
-            TemplateBody=template_setup,
-            TimeoutInMinutes=5,
-            Capabilities=['CAPABILITY_IAM'],
-            OnFailure='DO_NOTHING',
-            Parameters=[
-                {
-                    'ParameterKey': 'BucketName',
-                    'ParameterValue': setup_bucket_name
-                }
-            ]
-        )
-        stack_id = response['StackId']
-        while True:
-            response = cloudformation_client.describe_stacks(StackName=stack_id)
-            if response['Stacks'][0]['StackStatus'] in ['CREATE_IN_PROGRESS']:
-                sleep(5)
-            elif response['Stacks'][0]['StackStatus'] in ['CREATE_FAILED']:
-                click.echo(
-                    'Error creating the support stack',
-                    err=True)
-                return
-            elif response['Stacks'][0]['StackStatus'] in ['CREATE_COMPLETE']:
-                break
+        stack_id = create_cloud_formation_setup_stack(
+            aws_profile_name=configuration['aws_profile_name'], aws_region_name=AWS_REGION_NAME,
+            setup_stack_name=SETUP_STACK_NAME, setup_bucket_name=setup_bucket_name)
+        if not check_cloud_formation_setup_stack_creation(
+                aws_profile_name=configuration['aws_profile_name'], aws_region_name=AWS_REGION_NAME,
+                stack_id=stack_id):
+            return
         click.echo('Stack successfully created')
     # going to upload all the needed lambda functions
     s3_resource = session.resource(service_name='s3')
