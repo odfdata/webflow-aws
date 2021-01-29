@@ -12,15 +12,6 @@ from webflow_aws.utils.base_utils import configuration_yaml_exists, get_configur
 from webflow_aws.utils.config_maker import ConfigMaker
 
 
-def check_if_configuration_yaml_exists():
-    if not configuration_yaml_exists():
-        click.echo(
-            'The webflow-aws-config.yaml file doesn\'t exist. Read the README.md file to see how to create it',
-            err=True)
-        return False
-    return True
-
-
 @click.group()
 def cli():
     # eventually we can set a --verbose @click.option at this level. See https://www.youtube.com/watch?v=kNke39OZ2k0
@@ -33,7 +24,6 @@ def create_config():
     """
     Creates the configuration file. If a file is already present, asks the user if he'd like to overwrite it or keep
     the current configuration.
-    :return:
     """
     # check if configuration is not already present. In case it's present, ask the user confirmation to edit.
     config_exists = configuration_yaml_exists()
@@ -51,10 +41,11 @@ def create_config():
 
 
 @cli.command(short_help="Publish your website in production")
-def publish():
+@click.pass_context
+def publish(ctx):
     # check if the configuration.yaml file exists
-    if not check_if_configuration_yaml_exists():
-        return
+    if not configuration_yaml_exists():
+        ctx.forward(create_config)
     # check if there's a .zip file inside the websites folder
     zip_files = glob.glob('./*.zip')
     if not zip_files:
@@ -70,7 +61,7 @@ def publish():
     # cp app.py .
     dest = shutil.copyfile(os.path.dirname(os.path.abspath(__file__)) + '/app.py', 'app.py')
     # exec cdk deploy
-    os.system(f'cdk deploy --profile {configuration.get("aws_profile_name", "default")} --require-approval never')
+    os.system(f'cdk deploy --profile {configuration["aws_profile_name"]} --require-approval never')
     os.remove('cdk.json')
     os.remove('app.py')
     s3_resource = session.resource(service_name='s3')
@@ -82,14 +73,13 @@ def publish():
 
 
 @cli.command(short_help='Create all the needed resources to publish your website')
-def setup():
+@click.pass_context
+def setup(ctx):
     # check if the configuration.yaml file exists
-    if not check_if_configuration_yaml_exists():
-        return
+    if not configuration_yaml_exists():
+        ctx.forward(create_config)
     configuration = get_configuration()
-    session = boto3.session.Session(
-        profile_name=configuration.get('aws_profile_name', 'default'),
-        region_name=AWS_REGION_NAME)
+    session = boto3.session.Session(profile_name=configuration['aws_profile_name'], region_name=AWS_REGION_NAME)
     cloudformation_client = session.client(service_name='cloudformation')
     click.echo('Going to create all the needed resources.')
     # check if the setup stack is already created
@@ -98,13 +88,13 @@ def setup():
         stack_info for stack_info in response.get('Stacks', [])
         if stack_info.get('StackName', '') == SETUP_STACK_NAME]
     setup_bucket_name = get_setup_bucket_name(
-        aws_region_name=AWS_REGION_NAME, aws_profile_name=configuration.get('aws_profile_name', 'default'))
+        aws_region_name=AWS_REGION_NAME, aws_profile_name=configuration['aws_profile_name'])
     if not already_created_stack:
         stack_id = create_cloud_formation_setup_stack(
-            aws_profile_name=configuration.get('aws_profile_name', 'default'), aws_region_name=AWS_REGION_NAME,
+            aws_profile_name=configuration['aws_profile_name'], aws_region_name=AWS_REGION_NAME,
             setup_stack_name=SETUP_STACK_NAME, setup_bucket_name=setup_bucket_name)
         if not check_cloud_formation_setup_stack_creation(
-                aws_profile_name=configuration.get('aws_profile_name', 'default'), aws_region_name=AWS_REGION_NAME,
+                aws_profile_name=configuration['aws_profile_name'], aws_region_name=AWS_REGION_NAME,
                 stack_id=stack_id):
             return
         click.echo('Stack successfully created')

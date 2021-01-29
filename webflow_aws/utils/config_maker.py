@@ -4,12 +4,13 @@ import boto3
 import click
 import yaml
 
+from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
 from webflow_aws.utils.base_utils import get_configuration, configuration_yaml_exists, get_setup_bucket_name
 
 
 class ConfigMaker(object):
     """
-    USed to create / edit .yaml configuration file for a specific website.
+    Used to create / edit .yaml configuration file for a specific website.
 
     Attributes:
         domain_name: str                The main domain connected to this project
@@ -130,9 +131,9 @@ class ConfigMaker(object):
                                           self.aws_profile_name) > 0 and self.aws_profile_name in aws_profiles else None,
                                       type=click.Choice(aws_profiles))
             boto3_session = boto3.session.Session(profile_name=user_input)
-            profle_data = boto3_session.client('sts').get_caller_identity()
-            aws_account_id = profle_data.get('Account')
-            aws_user_arn = profle_data.get('Arn')
+            profile_data = boto3_session.client('sts').get_caller_identity()
+            aws_account_id = profile_data.get('Account')
+            aws_user_arn = profile_data.get('Arn')
             resp = click.confirm(f"  Confirm profile {click.style(user_input, bold=True)} "
                                  f"for account {click.style(aws_account_id, bold=True)} "
                                  f"(user ARN {click.style(aws_user_arn, bold=True)})?", default=True)
@@ -154,12 +155,12 @@ class ConfigMaker(object):
 
         # these values can be asked as advanced option in a future improvement of this command
         boto3_session = boto3.session.Session(profile_name=self.aws_profile_name)
-        profle_data = boto3_session.client('sts').get_caller_identity()
-        aws_account_id = profle_data.get('Account')
+        profile_data = boto3_session.client('sts').get_caller_identity()
+        aws_account_id = profile_data.get('Account')
         self.bucket_name = f"{self.domain_name}-{aws_account_id}"
         self.stack_name = self.domain_name.replace(".", "-")
-        self.setup_bucket_name = get_setup_bucket_name("us-east-1", self.aws_profile_name)
-        self.setup_stack_name = 'webflow-aws-setup-stack'
+        self.setup_bucket_name = get_setup_bucket_name(AWS_REGION_NAME, self.aws_profile_name)
+        self.setup_stack_name = SETUP_STACK_NAME
 
     def write_config(self):
         """

@@ -56,9 +56,9 @@ class WebflowAWSStack(core.Stack):
         self.__create_s3_source_bucket_policy(
             s3_source_bucket=s3_source_bucket, cloud_front_origin_access_identity=cloud_front_origin_access_identity)
         self.__create_route_53_record_group(
-            route_53_hosted_zone=route_53_hosted_zone,
-            domain_names=configuration['CNAMEs'], cloud_front_distribution=cloud_front_www)
-        self.__create_cloud_front_www_output(cloud_front_www=cloud_front_www)
+            route_53_hosted_zone=route_53_hosted_zone, domain_name=configuration['domain_name'],
+            alternative_domain_names=configuration['CNAMEs'], cloud_front_distribution=cloud_front_www)
+        # self.__create_cloud_front_www_output(cloud_front_www=cloud_front_www)
 
     def __create_cloud_front_cache_policy(self) -> aws_cloudfront.CachePolicy:
         return aws_cloudfront.CachePolicy(
@@ -66,8 +66,8 @@ class WebflowAWSStack(core.Stack):
             comment='The CloudFront cache policy used by the DefaultCacheBehavior',
             default_ttl=Duration.seconds(1),
             max_ttl=Duration.seconds(1),
-            min_ttl=Duration.seconds(1),
-            cache_policy_name='CloudFrontWWWCachePolicy')
+            min_ttl=Duration.seconds(1)
+        )
 
     def __create_cloud_front_origin_access_identity(self) -> aws_cloudfront.OriginAccessIdentity:
         return aws_cloudfront.OriginAccessIdentity(
@@ -151,8 +151,10 @@ class WebflowAWSStack(core.Stack):
             export_name='ARecord')
 
     def __create_route_53_record_group(
-            self, route_53_hosted_zone: aws_route53.HostedZone, domain_names: List[str],
+            self, route_53_hosted_zone: aws_route53.HostedZone, domain_name: str, alternative_domain_names: List[str],
             cloud_front_distribution: aws_cloudfront.Distribution) -> List[aws_route53.ARecord]:
+        domain_names = alternative_domain_names
+        domain_names.append(domain_name)
         return [
             aws_route53.RecordSet(
                 self, domain_name.replace('.', '').upper(),
@@ -162,7 +164,7 @@ class WebflowAWSStack(core.Stack):
                 target=aws_route53.RecordTarget.from_alias(alias_target=aws_route53_targets.CloudFrontTarget(
                     distribution=cloud_front_distribution
                 ))
-            ) for index, domain_name in enumerate(domain_names)
+            ) for domain_name in set(domain_names)
         ]
 
     def __create_ssl_certificate(
@@ -214,7 +216,6 @@ class WebflowAWSStack(core.Stack):
             assumed_by=ServicePrincipal('lambda.amazonaws.com'),
             description='Execution role that allows the lambda function to get the uploaded zip from S3, upload the '
                         'unpacked one and invalidate the CDN',
-            role_name='S3TriggerLambdaExecutionRole',
             path='/',
             managed_policies=[ManagedPolicy.from_aws_managed_policy_name('service-role/AWSLambdaBasicExecutionRole')],
             inline_policies={
