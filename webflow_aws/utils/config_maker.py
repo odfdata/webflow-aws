@@ -4,6 +4,7 @@ import boto3
 import click
 import yaml
 
+from botocore.exceptions import ClientError
 from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
 from webflow_aws.utils.base_utils import get_configuration, configuration_yaml_exists, get_setup_bucket_name
 
@@ -38,9 +39,11 @@ class ConfigMaker(object):
         self.setup_stack_name: str = ""
 
         self._config_loaded: bool = False
-        self._route53_zone_added: bool = False
-
         self._load_config()
+
+    @property
+    def route53_zone_added(self) -> bool:
+        return True if self.route_53_hosted_zone_id and self.route_53_hosted_zone_name else False
 
     def _load_config(self):
         """
@@ -116,11 +119,11 @@ class ConfigMaker(object):
                                       self.route_53_hosted_zone_id) > 0 else None,
                                   type=str)
         self.route_53_hosted_zone_id = user_input
-        user_input = click.prompt(f"Finally, your Route53 Hosted Zone Name",
-                                  default=self.route_53_hosted_zone_name if self.route_53_hosted_zone_name and len(
-                                      self.route_53_hosted_zone_name) > 0 else None,
-                                  type=str)
-        self.route_53_hosted_zone_name = user_input
+        # user_input = click.prompt(f"Finally, your Route53 Hosted Zone Name",
+        #                           default=self.route_53_hosted_zone_name if self.route_53_hosted_zone_name and len(
+        #                               self.route_53_hosted_zone_name) > 0 else None,
+        #                           type=str)
+        # self.route_53_hosted_zone_name = user_input
 
     def _ask_profile_name(self):
         """
@@ -148,24 +151,32 @@ class ConfigMaker(object):
     def ask(self):
         """
         Asks for all the basic information to the user in order to create the correct configuration .yaml file
-        :return:
+        :return: True if all the variables have been set correctly
         """
         click.echo("")
         click.echo(click.style("CREATE A NEW CONFIGURATION FILE", fg="green", underline=True))
         self._ask_domain_and_cnames()
         click.echo("")
-        self._ask_route53()
-        click.echo("")
         self._ask_profile_name()
+        click.echo("")
+        self._ask_route53()
 
         # these values can be asked as advanced option in a future improvement of this command
         boto3_session = boto3.session.Session(profile_name=self.aws_profile_name)
+        route53_client = boto3_session.client(service_name='route53')
         profile_data = boto3_session.client('sts').get_caller_identity()
         aws_account_id = profile_data.get('Account')
+        try:
+            self.route_53_hosted_zone_name = route53_client.get_hosted_zone(
+                Id=self.route_53_hosted_zone_id)['HostedZone']['Name']
+        except ClientError:
+            click.echo(click.style('Route53 Hosted Zone ID', bold=True, underline=True, fg="red"), err=True)
+            return False
         self.bucket_name = f"{self.domain_name}-{aws_account_id}"
         self.stack_name = self.domain_name.replace(".", "-")
         self.setup_bucket_name = get_setup_bucket_name(AWS_REGION_NAME, self.aws_profile_name)
         self.setup_stack_name = SETUP_STACK_NAME
+        return True
 
     def write_config(self):
         """
@@ -179,7 +190,7 @@ class ConfigMaker(object):
             **({
                    'route_53_hosted_zone_id': self.route_53_hosted_zone_id,
                    'route_53_hosted_zone_name': self.route_53_hosted_zone_name
-               } if self._route53_zone_added else {}),
+               } if self.route53_zone_added else {}),
             'stack_name': self.stack_name,
             'aws_profile_name': self.aws_profile_name,
             'setup_bucket_name': self.setup_bucket_name,

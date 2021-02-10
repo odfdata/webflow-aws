@@ -39,8 +39,9 @@ def create_config():
 
     # ask for elements
     config_maker = ConfigMaker()
-    config_maker.ask()
-    config_maker.write_config()
+    configuration_finished = config_maker.ask()
+    if configuration_finished:
+        config_maker.write_config()
 
 
 @cli.command(short_help="Publish your website in production")
