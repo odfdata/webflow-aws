@@ -170,7 +170,7 @@ class ConfigMaker(object):
             self.route_53_hosted_zone_name = route53_client.get_hosted_zone(
                 Id=self.route_53_hosted_zone_id)['HostedZone']['Name']
         except ClientError:
-            click.echo(click.style('Route53 Hosted Zone ID', bold=True, underline=True, fg="red"), err=True)
+            click.echo(click.style('Invalid Route53 Hosted Zone ID', bold=True, underline=True, fg="red"), err=True)
             return False
         self.bucket_name = f"{self.domain_name}-{aws_account_id}"
         self.stack_name = self.domain_name.replace(".", "-")

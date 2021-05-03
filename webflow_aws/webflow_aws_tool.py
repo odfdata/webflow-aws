@@ -3,11 +3,9 @@ import json
 import os
 import shutil
 
-import emoji as emoji
-import pip
-
 import boto3
 import click
+import emoji as emoji
 
 from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME, GITHUB_REPOSITORY_URL
 from webflow_aws.utils.base_utils import configuration_yaml_exists, get_configuration, get_setup_bucket_name, \
