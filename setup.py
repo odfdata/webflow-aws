@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
+# with open('requirements.txt') as f:
+#     requirements = f.read().splitlines()
 
 setup(
     name='webflow-aws',
@@ -14,7 +14,24 @@ setup(
     url='https://github.com/CreateInCloud/webflow-aws',
     packages=find_packages(),
     python_requires='>=3.6',
-    install_requires=requirements,
+    install_requires=[
+        'boto3~=1.16.46',
+        'botocore~=1.19.46',
+        'pyyaml~=5.3.1',
+        'aws-cdk.core~=1.86.0',
+        'aws-cdk.aws-certificatemanager~=1.86.0',
+        'aws-cdk.aws-cloudfront~=1.86.0',
+        'aws-cdk.aws-s3~=1.86.0',
+        'aws-cdk.aws-s3-notifications~=1.86.0',
+        'aws-cdk.aws-lambda~=1.86.0',
+        'aws-cdk.aws-iam~=1.86.0',
+        'aws-cdk.aws-cloudfront-origins~=1.86.0',
+        'aws-cdk.aws-route53~=1.86.0',
+        'aws-cdk.aws-route53-targets~=1.86.0',
+        'Click~=7.1.2',
+        'tqdm~=4.56.0',
+        'emoji~=1.2.0'
+    ],
     include_package_data=True,
     license="Apache License 2.0",
     classifiers=[
