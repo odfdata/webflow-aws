@@ -245,6 +245,7 @@ class WebflowAWSStack(core.Stack):
             role=execution_role,
             runtime=aws_lambda.Runtime.NODEJS_12_X,
             timeout=Duration.seconds(300),
+            memory_size=1024,
             environment={'CDN_DISTRIBUTION_ID': cloud_front_distribution.distribution_id},
             code=Code.bucket(
                 bucket=Bucket.from_bucket_name(self, "WebflowAWSSupport", bucket_name=webflow_aws_setup_bucket),
