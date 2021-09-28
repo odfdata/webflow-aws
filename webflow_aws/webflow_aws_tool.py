@@ -13,6 +13,7 @@ from webflow_aws.utils.base_utils import configuration_yaml_exists, get_configur
 from webflow_aws.utils.config_maker import ConfigMaker
 
 
+@click.version_option()
 @click.group()
 def cli():
     # eventually we can set a --verbose @click.option at this level. See https://www.youtube.com/watch?v=kNke39OZ2k0
