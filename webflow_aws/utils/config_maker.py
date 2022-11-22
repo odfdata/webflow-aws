@@ -97,7 +97,6 @@ class ConfigMaker(object):
     def _ask_route53(self):
         """
         Asks to user if he'd like to configure route53 or use custom DNS manager
-        :return:
         """
         # ask if user would like to add route53 as manager
         # get domain names, if user would like to

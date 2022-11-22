@@ -1,7 +1,9 @@
 from typing import Optional, List
 
 from aws_cdk import (
-    core,
+    Fn,
+    Stack,
+    Duration,
     aws_lambda,
     aws_s3,
     aws_s3_notifications,
@@ -17,13 +19,13 @@ from aws_cdk.aws_iam import ServicePrincipal, ManagedPolicy, PolicyDocument, Pol
 from aws_cdk.aws_lambda import Code
 from aws_cdk.aws_route53 import HostedZone
 from aws_cdk.aws_s3 import Bucket, EventType, NotificationKeyFilter, BlockPublicAccess
-from aws_cdk.core import Fn, Duration
 
+from constructs import Construct
 
-class WebflowAWSStack(core.Stack):
+class WebflowAWSStack(Stack):
 
     def __init__(
-            self, scope: core.Construct, id: str, webflow_aws_setup_bucket: str, configuration: dict, **kwargs) -> None:
+            self, scope: Construct, id: str, webflow_aws_setup_bucket: str, configuration: dict, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
         route_53_hosted_zone = HostedZone.from_hosted_zone_attributes(
             self, 'HostedZone', hosted_zone_id=configuration['route_53_hosted_zone_id'],
