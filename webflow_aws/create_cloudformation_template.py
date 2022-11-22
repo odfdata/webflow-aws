@@ -10,7 +10,9 @@ from aws_cdk import (
     aws_iam,
     aws_cloudfront,
     aws_cloudfront_origins,
-    aws_certificatemanager, aws_route53, aws_route53_targets
+    aws_certificatemanager,
+    aws_route53,
+    aws_route53_targets
 )
 from aws_cdk.aws_certificatemanager import CertificateValidation
 from aws_cdk.aws_cloudfront import BehaviorOptions, AllowedMethods, CachedMethods, ViewerProtocolPolicy, EdgeLambda, \
