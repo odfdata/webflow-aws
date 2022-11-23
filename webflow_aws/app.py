@@ -14,7 +14,7 @@ configuration = get_configuration()
 
 Backend(
     app,
-    "WebflowAwsApp",
+    configuration['stack_name'],
     configuration=configuration,
     env={"region": "us-east-1"}
 )

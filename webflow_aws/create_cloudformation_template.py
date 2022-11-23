@@ -242,7 +242,8 @@ class WebflowAWSStack(Stack):
             self, webflow_aws_setup_bucket: str, execution_role: aws_iam.Role,
             cloud_front_distribution: aws_cloudfront.Distribution) -> aws_lambda.Function:
         return aws_lambda.Function(
-            self, 'S3TriggerLambdaFunction',
+            self,
+            'S3TriggerLambdaFunction',
             description='Function responsible of unzipping the zip file uploaded and move the files to the '
                         'correct folder',
             handler='index.handler',
