@@ -1,8 +1,7 @@
-import boto3
 import aws_cdk as cdk
 
 from backend.component import Backend
-from backend.utils.base_utils import configuration_yaml_exists, get_configuration
+from utils.base_utils import configuration_yaml_exists, get_configuration
 
 app = cdk.App()
 

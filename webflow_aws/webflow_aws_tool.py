@@ -7,9 +7,8 @@ import boto3
 import click
 import emoji as emoji
 
-from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME, GITHUB_REPOSITORY_URL
-from webflow_aws.utils.base_utils import configuration_yaml_exists, get_configuration, get_setup_bucket_name, \
-    create_cloud_formation_setup_stack, check_cloud_formation_setup_stack_creation
+from webflow_aws.global_variables import AWS_REGION_NAME, GITHUB_REPOSITORY_URL
+from webflow_aws.utils.base_utils import configuration_yaml_exists, get_configuration
 from webflow_aws.utils.config_maker import ConfigMaker
 
 
@@ -79,47 +78,3 @@ def publish(ctx):
         f'You website has been published and you can visit it on https://{configuration["domain_name"]}. '
         f'Thanks for using webflow-aws!\n'
         f'If you find our project useful, please {emoji.emojize(":star:")} us on github {GITHUB_REPOSITORY_URL}')
-
-
-@cli.command(short_help='Create all the needed resources to publish your website')
-@click.pass_context
-def setup(ctx):
-    # check if the configuration.yaml file exists
-    if not configuration_yaml_exists():
-        ctx.forward(create_config)
-    configuration = get_configuration()
-    session = boto3.session.Session(profile_name=configuration['aws_profile_name'], region_name=AWS_REGION_NAME)
-    cloudformation_client = session.client(service_name='cloudformation')
-    click.echo('Going to create all the needed resources.')
-    # check if the setup stack is already created
-    response = cloudformation_client.describe_stacks()
-    already_created_stack = [
-        stack_info for stack_info in response.get('Stacks', [])
-        if stack_info.get('StackName', '') == SETUP_STACK_NAME]
-    setup_bucket_name = get_setup_bucket_name(
-        aws_region_name=AWS_REGION_NAME, aws_profile_name=configuration['aws_profile_name'])
-    if not already_created_stack:
-        stack_id = create_cloud_formation_setup_stack(
-            aws_profile_name=configuration['aws_profile_name'], aws_region_name=AWS_REGION_NAME,
-            setup_stack_name=SETUP_STACK_NAME, setup_bucket_name=setup_bucket_name)
-        if not check_cloud_formation_setup_stack_creation(
-                aws_profile_name=configuration['aws_profile_name'], aws_region_name=AWS_REGION_NAME,
-                stack_id=stack_id):
-            return
-        click.echo('Stack successfully created')
-    # going to upload all the needed lambda functions
-    s3_resource = session.resource(service_name='s3')
-    s3_resource.meta.client.upload_file(
-        Bucket=setup_bucket_name,
-        Filename=os.path.dirname(
-            os.path.abspath(__file__)) + '/lambda_function/cloudfront_www_edit_path_for_origin/'
-                                         'cloudfront_www_edit_path_for_origin.zip',
-        Key='lambda_function/cloudfront_www_edit_path_for_origin/package.zip'
-    )
-    s3_resource.meta.client.upload_file(
-        Bucket=setup_bucket_name,
-        Filename=os.path.dirname(
-            os.path.abspath(__file__)) + '/lambda_function/s3_trigger_artifacts_upload/s3_trigger_upload_artifacts.zip',
-        Key='lambda_function/s3_trigger_artifacts_upload/package.zip'
-    )
-    click.echo('Everything has been created. Now you need to run this command: webflow-aws publish')
