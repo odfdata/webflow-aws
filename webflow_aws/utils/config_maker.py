@@ -3,9 +3,8 @@ from typing import Optional, List
 import boto3
 import click
 import yaml
-
 from botocore.exceptions import ClientError
-from webflow_aws.global_variables import AWS_REGION_NAME
+
 from webflow_aws.utils.base_utils import get_configuration, configuration_yaml_exists
 
 
@@ -46,7 +45,6 @@ class ConfigMaker(object):
     def _load_config(self):
         """
         Loads the configuration (if present) and stores the values inside this class
-        :return:
         """
         if configuration_yaml_exists():
             config = get_configuration()
@@ -92,7 +90,7 @@ class ConfigMaker(object):
 
     def _ask_route53(self):
         """
-        Asks to user if he'd like to configure route53 or use custom DNS manager
+        Asks user if he'd like to configure route53 or use custom DNS manager
         """
         # ask if user would like to add route53 as manager
         # get domain names, if user would like to
@@ -174,7 +172,6 @@ class ConfigMaker(object):
     def write_config(self):
         """
         Dump the configuration to a file called webflow-aws-config.yaml
-        :return:
         """
         config_dict = {
             'CNAMEs': self.CNAMEs,

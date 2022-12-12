@@ -45,6 +45,10 @@ def create_config():
 @cli.command(short_help="Publish your website in production")
 @click.pass_context
 def publish(ctx):
+    """
+    Publish the zip file contained in the current folder. It uploads the file in the correct S3 bucket and once the
+    upload is finished, a trigger starts and the CDN invalidation starts
+    """
     # check if the configuration.yaml file exists
     if not configuration_yaml_exists():
         ctx.forward(create_config)

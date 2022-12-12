@@ -10,7 +10,7 @@ from aws_cdk import (
     aws_s3,
     aws_s3_notifications,
     Fn,
-    Stack,
+    Stack
 )
 
 from backend.compute.infrastructure import Compute
@@ -19,6 +19,12 @@ from backend.storage.infrastructure import Storage
 
 
 class Backend(Stack):
+    """
+    The backend AWS CDK app. It contains these sub-constructs:
+        + networking: contains all networking services used for WebflowAWS
+        + compute: contains all compute services used for WebflowAWS
+        + storage: contains all storage services used for WebflowAWS
+    """
 
     def __init__(self, scope: Construct, construct_id: str, configuration: dict, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -42,7 +48,15 @@ class Backend(Stack):
 
     @staticmethod
     def __add_s3_bucket_event_notification(
-            s3_bucket: aws_s3.Bucket, s3_trigger_lambda_function: aws_lambda.Function):
+            s3_bucket: aws_s3.Bucket, s3_trigger_lambda_function: aws_lambda.Function
+    ):
+        """
+        Add the S3 bucket event notification to trigger the AWS Lambda function every time a new object is created
+        in the AWS S3 bucket inside the artifacts/ folder.
+
+        :param s3_bucket: The S3 bucket for which you want to create the event notification for
+        :param s3_trigger_lambda_function: The AWS Lambda function you want to trigger
+        """
         s3_bucket.add_event_notification(
             aws_s3.EventType.OBJECT_CREATED,
             aws_s3_notifications.LambdaDestination(s3_trigger_lambda_function),
@@ -50,10 +64,20 @@ class Backend(Stack):
 
     def __create_route_53_record_group(
             self, route_53_hosted_zone: aws_route53.HostedZone, domain_name: str, alternative_domain_names: List[str],
-            cloud_front_distribution: aws_cloudfront.Distribution) -> List[aws_route53.ARecord]:
+            cloud_front_distribution: aws_cloudfront.Distribution
+    ):
+        """
+        Create a new route 53 record group based on domain name and alternative domain names.
+
+        :param route_53_hosted_zone: the route 53 hosted zone you want to update
+        :param domain_name: the domain name
+        :param alternative_domain_names: the list of domain names you want to support
+        :param cloud_front_distribution: the cloudfront distribution you want to point all the domains
+        and subdomains to
+        """
         domain_names = alternative_domain_names
         domain_names.append(domain_name)
-        return [
+        [
             aws_route53.RecordSet(
                 self,
                 domain_name.replace('.', '').upper(),
@@ -68,8 +92,15 @@ class Backend(Stack):
 
     def __create_s3_source_bucket_policy(
             self, s3_source_bucket: aws_s3.Bucket,
-            cloud_front_origin_access_identity: aws_cloudfront.OriginAccessIdentity):
-        return aws_s3.CfnBucketPolicy(
+            cloud_front_origin_access_identity: aws_cloudfront.OriginAccessIdentity
+    ):
+        """
+        Create the S3 source bucket policy that allows the CDN to get files from the S3 bucket
+        :param s3_source_bucket: the S3 source bucket you want to allow CDN to get files from
+        :param cloud_front_origin_access_identity: the cloudfront origin access identity you want to allow
+        bucket access for
+        """
+        aws_s3.CfnBucketPolicy(
             self, 'S3SourceBucketPolicy',
             bucket=s3_source_bucket.bucket_name,
             policy_document=aws_iam.PolicyDocument(
@@ -84,8 +115,14 @@ class Backend(Stack):
                             f'{cloud_front_origin_access_identity.origin_access_identity_name}')])]))
 
     def __create_s3_trigger_lambda_invoke_permission(
-            self, bucket_name: str, s3_trigger_lambda_function: aws_lambda.Function) -> aws_lambda.Permission:
-        return aws_lambda.CfnPermission(
+            self, bucket_name: str, s3_trigger_lambda_function: aws_lambda.Function
+    ):
+        """
+        Create the permission to invoke the AWS lambda function from the S3 bucket
+        :param bucket_name: the s3 bucket name from which the AWS Lambda function will be invoked
+        :param s3_trigger_lambda_function: the AWS lambda function the bucket needs to have the permission to invoke
+        """
+        aws_lambda.CfnPermission(
             self, 'S3TriggerLambdaInvokePermission',
             function_name=s3_trigger_lambda_function.function_name,
             action='lambda:InvokeFunction',

@@ -7,7 +7,9 @@ from constructs import Construct
 
 
 class Storage(Construct):
+    """
 
+    """
     def __init__(self, scope: Construct, id_: builtins.str, configuration: dict):
         super().__init__(scope, id_)
         self.s3_bucket = aws_s3.Bucket(
