@@ -1,7 +1,8 @@
 import builtins
 
 from aws_cdk import (
-    aws_s3
+    aws_s3,
+    RemovalPolicy
 )
 from constructs import Construct
 
@@ -21,4 +22,7 @@ class Storage(Construct):
                 block_public_acls=True,
                 block_public_policy=True,
                 ignore_public_acls=True,
-                restrict_public_buckets=True))
+                restrict_public_buckets=True),
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_delete_objects=True
+        )
