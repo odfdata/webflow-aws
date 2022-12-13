@@ -1,3 +1,8 @@
 include cdk.json
 include requirements.txt
+include webflow_aws/backend/networking/functions/index.editPathForOrigin.js
+include webflow_aws/backend/compute/functions/index.checkLanguage.js
+include webflow_aws/backend/compute/functions/index.s3TriggerArtifactsUpload.js
+include webflow_aws/backend/compute/functions/package.json
+include webflow_aws/backend/compute/functions/yarn.lock
 recursive-exclude tests *

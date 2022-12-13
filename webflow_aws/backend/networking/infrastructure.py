@@ -1,5 +1,6 @@
 import builtins
 import os
+from pathlib import Path
 from typing import Optional, List
 
 from aws_cdk import (
@@ -39,7 +40,7 @@ class Networking(Construct):
             cloud_front_edit_path_for_origin_lambda_edge=self.cloud_front_edit_path_for_origin_lambda_edge,
             origin_bucket_name=configuration['bucket_name'])
 
-    def __create_cloud_front_edith_path_for_origin_lambda_edge(self):
+    def __create_cloud_front_edit_path_for_origin_lambda_edge(self):
         """
         Create a new AWS Lambda @edge with all the correct permissions.
         """
@@ -49,7 +50,9 @@ class Networking(Construct):
             description='Appends .html extension to universal paths, preserving files with other extensions (ex .css)',
             handler='lambdaHandler',
             code=aws_lambda.Code.from_asset(
-                os.path.abspath("./webflow_aws/backend/networking/functions/")),
+                Path(__file__).absolute().parent.parent.parent.__str__() +
+                "/backend/networking/functions"
+            ),
             log_retention=logs.RetentionDays.TWO_WEEKS,
             runtime=aws_lambda.Runtime.NODEJS_16_X,
             architecture=aws_lambda.Architecture.X86_64,

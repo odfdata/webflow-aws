@@ -140,3 +140,4 @@ tmp/
 
 # WebflowAws config files
 webflow-aws-config.yaml
+*.zip

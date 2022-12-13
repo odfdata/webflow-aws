@@ -1,5 +1,6 @@
 import builtins
 import os
+from pathlib import Path
 
 from aws_cdk import (
     aws_cloudfront,
@@ -67,19 +68,25 @@ class Compute(Construct):
         :param cloud_front_distribution: the cloudfront distribution the AWS lambda function will be allowed
         to invalidate. It will be set as environment variables named CDN_DISTRIBUTION_ID
         """
+        print(Path(__file__).absolute().parent.parent.parent.__str__())
         self.s3_trigger_lambda = lambda_nodejs.NodejsFunction(
             self,
             'S3TriggerLambdaFunction',
             description='Function responsible of unzipping the zip file uploaded and move the files to the '
                         'correct folder',
             handler='lambdaHandler',
-            entry=os.path.abspath("./webflow_aws/backend/compute/functions/index.s3TriggerArtifactsUpload.js"),
-            deps_lock_file_path=os.path.abspath("./webflow_aws/backend/compute/functions/yarn.lock"),
+            entry=Path(__file__).absolute().parent.parent.parent.__str__() +
+            "/backend/compute/functions/index.s3TriggerArtifactsUpload.js",
+            deps_lock_file_path=Path(__file__).absolute().parent.parent.parent.__str__() +
+            "/backend/compute/functions/yarn.lock",
             role=self.s3_trigger_lambda_execution_role,
             runtime=aws_lambda.Runtime.NODEJS_16_X,
             architecture=aws_lambda.Architecture.ARM_64,
             timeout=Duration.seconds(300),
             memory_size=1024,
+            bundling={
+                "minify": True
+            },
             environment={'CDN_DISTRIBUTION_ID': cloud_front_distribution.distribution_id},
             log_retention=logs.RetentionDays.TWO_WEEKS
         )

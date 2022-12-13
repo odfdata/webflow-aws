@@ -13,9 +13,9 @@ from aws_cdk import (
     Stack
 )
 
-from backend.compute.infrastructure import Compute
-from backend.networking.infrastructure import Networking
-from backend.storage.infrastructure import Storage
+from webflow_aws.backend.compute.infrastructure import Compute
+from webflow_aws.backend.networking.infrastructure import Networking
+from webflow_aws.backend.storage.infrastructure import Storage
 
 
 class Backend(Stack):

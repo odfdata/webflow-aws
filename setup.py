@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, find_namespace_packages
 
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
@@ -12,7 +12,7 @@ setup(
     author='odfdata',
     author_email='fc@oracleofde.fi',
     url='https://github.com/odfdata/webflow-aws',
-    packages=find_packages(),
+    packages=find_namespace_packages(),
     python_requires='>=3.6',
     install_requires=requirements,
     include_package_data=True,
