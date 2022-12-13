@@ -1,11 +1,15 @@
 # webflow-aws
+
+| 🛑 | If you already deployed one website using the **v1** version of the tool, follow the [Upgrade](#upgrade) section before updating the tool version. |
+|---------------|:-------------------------------------------------------------------------|
+
 An out-of-the box tool written in Python to deploy your [Webflow](https://webflow.com/) static website on AWS with a serverless architecture.
 
 This tool uses the power of Cloud Formation to let you have your website up in minutes, with CDN and SSL Certificate enabled.
 
 You can manage up to an infinite number of websites in the same AWS account, paying only for the real traffic. That's the beautiful part of serverless 😉
 
-| :point_up:    | In this version, everything needs to be hosted in AWS, also your domain. |
+| ☝️ | In this version, everything needs to be hosted in AWS, also your domain. |
 |---------------|:-------------------------------------------------------------------------|
 
 ## Getting Started
@@ -19,7 +23,7 @@ In order to use this tool, you need to have:
 - Python 3.6 or later with pip3 installed ([instructions](https://docs.python-guide.org/starting/install3/linux/))
 - AWS CLI installed and configured ([instructions](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)).
 
-Finally, install the [AWS CDK command line tool](https://aws.amazon.com/cdk/?nc1=h_ls) with the following command
+Finally, install the [AWS CDK command line tool](https://aws.amazon.com/cdk) with the following command
 
 ```bash
 npm install -g aws-cdk
@@ -31,7 +35,7 @@ You can download and install the latest version of this tool from the Python pac
 as follows:
 
 ```bash
-pip3 install --upgrade webflow-aws
+pip3 install webflow-aws
 ```
 
 #### Advanced Installation
@@ -44,11 +48,11 @@ To use our tool, you have to clone this repository and install:
 
 - Clone using HTTPs:
   ```bash
-  git clone https://github.com/CreateInCloud/webflow-aws.git
+  git clone https://github.com/odfdata/webflow-aws.git
   ```
 - Clone using SSH:
   ```bash
-  git clone git@github.com:CreateInCloud/webflow-aws.git 
+  git clone git@github.com:odfdata/webflow-aws.git 
   ```
 
 After you cloned the repository, go inside the **webflow-aws** folder and generate the **.whl** package to be installed.
@@ -85,6 +89,36 @@ the available commands, and check if it's correctly installed, run the following
 ```bash
 webflow-aws --help
 ```
+
+### Upgrade
+
+If you are already using the **v2** version of the tool, you can safely update the version running this command:
+
+```bash
+pip3 install --upgrade webflow-aws
+```
+
+If you already deployed a website using the **v1** version of the tool, you have to run this command before:
+
+```bash
+webflow-aws delete
+```
+
+| ⚠️ | Running the command above will put your current website offline. Plan to run the migration when you don't have traffic on your website. |
+|---------------|:-------------------------------------------------------------------------|
+
+Now you can safely run:
+
+```bash
+pip3 install --upgrade webflow-aws
+```
+
+And publish again everything:
+
+```bash
+webflow-aws publish
+```
+
 
 ## Deploy your website
 
@@ -167,13 +201,7 @@ Go inside the folder created before that contains:
 + `webflow-aws-config.yaml` file
 + `.zip` file
 
-If it's the first time you are deploying it online, you have to call this command before:
-```bash
-webflow-aws setup
-```
-This command will create the Cloud Formation stack containing the support resources. 
-
-After this command, you can execute:
+To deploy your website, you have to execute this command:
 
 ```bash
 webflow-aws publish
