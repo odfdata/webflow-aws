@@ -112,7 +112,7 @@ class Backend(Stack):
                         resources=[f'arn:aws:s3:::{s3_source_bucket.bucket_name}/*'],
                         principals=[aws_iam.ArnPrincipal(
                             f'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity '
-                            f'{cloud_front_origin_access_identity.origin_access_identity_name}')])]))
+                            f'{cloud_front_origin_access_identity.origin_access_identity_id}')])]))
 
     def __create_s3_trigger_lambda_invoke_permission(
             self, bucket_name: str, s3_trigger_lambda_function: aws_lambda.Function

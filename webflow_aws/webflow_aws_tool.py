@@ -54,8 +54,8 @@ def delete():
         json.dump({'app': 'python3 app.py'}, outfile)
     os.system(f'cdk destroy {configuration["stack_name"]} --profile {configuration["aws_profile_name"]} --require-approval never')
     os.system(f'cdk destroy {configuration["stack_name"]} --profile {configuration["aws_profile_name"]} --require-approval never')
-    # os.remove('cdk.json')
-    # os.remove('app.py')
+    os.remove('cdk.json')
+    os.remove('app.py')
 
 
 @cli.command(short_help="Publish your website in production")

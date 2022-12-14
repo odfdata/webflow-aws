@@ -85,6 +85,7 @@ class Compute(Construct):
             timeout=Duration.seconds(300),
             memory_size=1024,
             bundling={
+                "node_modules": ["adm-zip"],
                 "minify": True
             },
             environment={'CDN_DISTRIBUTION_ID': cloud_front_distribution.distribution_id},

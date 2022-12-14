@@ -1,7 +1,6 @@
-boto3
-botocore
-pyyaml
-aws-cdk-lib
-Click
-tqdm
-emoji
+boto3~=1.26.29
+pyyaml~=6.0
+aws-cdk-lib~=2.54.0
+Click~=8.1.3
+tqdm~=4.64.1
+emoji~=2.2.0
