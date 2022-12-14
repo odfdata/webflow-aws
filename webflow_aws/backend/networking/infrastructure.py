@@ -48,7 +48,7 @@ class Networking(Construct):
             self,
             'CloudFrontEditPathForOriginLambdaEdge',
             description='Appends .html extension to universal paths, preserving files with other extensions (ex .css)',
-            handler='lambdaHandler',
+            handler='editPathForOrigin.lambdaHandler',
             code=aws_lambda.Code.from_asset(
                 Path(__file__).absolute().parent.parent.parent.__str__() +
                 "/backend/networking/functions"
@@ -105,8 +105,9 @@ class Networking(Construct):
         domain_names = alternative_domain_names if alternative_domain_names else []
         domain_names.append(domain_name)
         domain_names = set(domain_names)
-        self.cloud_front_distribution_www = aws_cloudfront.Distribution(
-            self, 'CloudFrontMain',
+        self.main_cloud_front_distribution = aws_cloudfront.Distribution(
+            self,
+            'CloudFrontMain',
             enabled=True,
             certificate=ssl_certificate,
             comment='CloudFront Distribution for your main static website',
