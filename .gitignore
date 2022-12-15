@@ -127,8 +127,17 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-.idea/
 node_modules/
 cdk.out/
 websites/
 tmp/
+
+# MacOS Files
+.DS_Store
+
+# JetBrains Products
+.idea/
+
+# WebflowAws config files
+webflow-aws-config.yaml
+*.zip

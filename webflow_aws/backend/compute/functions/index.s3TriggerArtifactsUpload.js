@@ -13,7 +13,7 @@ var cf = new AWS.CloudFront();
  **/
 
 
-exports.handler = async (event) => {
+exports.lambdaHandler = async (event) => {
 
   let srcBucket = event.Records[0].s3.bucket.name;
   let srcKey    = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));

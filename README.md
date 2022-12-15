@@ -1,12 +1,16 @@
 # webflow-aws
+
+| 🛑  | If you already deployed one website using the **v1** version of the tool, follow the [Migration from v1 to v2](#migration-from-v1-to-v2) section before updating the tool version. |
+|-----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
 An out-of-the box tool written in Python to deploy your [Webflow](https://webflow.com/) static website on AWS with a serverless architecture.
 
 This tool uses the power of Cloud Formation to let you have your website up in minutes, with CDN and SSL Certificate enabled.
 
 You can manage up to an infinite number of websites in the same AWS account, paying only for the real traffic. That's the beautiful part of serverless 😉
 
-| :point_up:    | In this version, everything needs to be hosted in AWS, also your domain. |
-|---------------|:-------------------------------------------------------------------------|
+| ☝️  | In this version, everything needs to be hosted in AWS, also your domain. |
+|-----|:-------------------------------------------------------------------------|
 
 ## Getting Started
 
@@ -19,7 +23,7 @@ In order to use this tool, you need to have:
 - Python 3.6 or later with pip3 installed ([instructions](https://docs.python-guide.org/starting/install3/linux/))
 - AWS CLI installed and configured ([instructions](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)).
 
-Finally, install the [AWS CDK command line tool](https://aws.amazon.com/cdk/?nc1=h_ls) with the following command
+Finally, install the [AWS CDK command line tool](https://aws.amazon.com/cdk) with the following command
 
 ```bash
 npm install -g aws-cdk
@@ -31,7 +35,7 @@ You can download and install the latest version of this tool from the Python pac
 as follows:
 
 ```bash
-pip3 install --upgrade webflow-aws
+pip3 install webflow-aws
 ```
 
 #### Advanced Installation
@@ -44,11 +48,11 @@ To use our tool, you have to clone this repository and install:
 
 - Clone using HTTPs:
   ```bash
-  git clone https://github.com/CreateInCloud/webflow-aws.git
+  git clone https://github.com/odfdata/webflow-aws.git
   ```
 - Clone using SSH:
   ```bash
-  git clone git@github.com:CreateInCloud/webflow-aws.git 
+  git clone git@github.com:odfdata/webflow-aws.git 
   ```
 
 After you cloned the repository, go inside the **webflow-aws** folder and generate the **.whl** package to be installed.
@@ -86,12 +90,52 @@ the available commands, and check if it's correctly installed, run the following
 webflow-aws --help
 ```
 
+### Migration from v1 to v2
+
+If you used the **v1** version of the tool and you plan to migrate to the **v2**, remember this:
+
+| ⚠️  | Running the commands below will put your current website offline for couple of minutes. Plan to run the migration when you don't have traffic on your website. |
+|-----|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+To migrate from **v1** to **v2**, you have to delete the current deployed website from the AWS Console.
+Unfortunately is not possible to do it using our tool since there are resources that are running at edge and it takes
+time to complete the deletion on AWS side.
+
+These are the steps to delete your current website:
+
++ Open the configuration file you have locally (named *webflow-aws-config.yaml*), and search for the keywords
++ *stack_name* and *bucket_name* and copy the values.
++ Go to AWS Console and login in the account you have deployed your website.
++ Search for the AWS service named **S3** and open it.
++ Search for the Bucket with the same name copied before and click on the circle on the left of the name.
++ Click on the **Empty** button, and now you are ready to click on **Delete** button
++ Search for the AWS service named **CloudFormation** and open it.
++ Search for the stack deployed, click on it and click on **Delete**
++ After a couple of minutes, you will see the status stack equal to *DELETE_FAILED*
++ You can now click on **Delete** again, and check the square on the left of the resource name
++ Now you can click on **Delete stack**, and you are ready to upgrade your local tool.
+
+
+#### Update from v1 to v2
+
+Run the following command to update the tool: 
+
+```bash
+pip3 install --upgrade webflow-aws
+```
+
+Now you are ready to deploy your website using the new version running:
+
+```bash
+webflow-aws publish
+```
+
 ## Deploy your website
 
 You are now ready to deploy your website. Start by going to **Webflow** and download your created website as a `.zip` file 
 ([click here](https://university.webflow.com/lesson/code-export) to see a detailed guide on how to do it).
 
-Once you downloaded it, create a folder and put the `.zip` file inside. The folder's name doesn't matter, but make it meaningful for you. In our guide we will use the `example-website` folder
+Once you downloaded it, create a folder and put the `.zip` file inside. The folder's name does not matter, but make it meaningful for you. In our guide we will use the `example-website` folder
 
 ### Set up DNS record
 
@@ -100,7 +144,7 @@ Once your website is deployed, you will need a DNS Record to point to the file l
 * create a **hosted zone inside Route53** ([guide](https://medium.com/@dbclin/amazon-route-53-and-dns-whats-in-a-name-28fa4ac2826c)) on the AWS account you're using to deploy the website. In this scenario `webflow-aws` automatically manages the creation of all needed configuration, both for DNS Records and for SSL Certificate verification. 
 * **[beta]** use a **custom DNS manager**, such as GoDaddy or your domain registrant. In this scenario, do not configure Route 53 properties and, once website is published, instructions with CNAMEs to set will be shown to you, so that you can manually configure them. Moreover, during first website deployment, you will need to publish a TXT record to verify your SSL Certificate.
 
-With `webflow-aws` you can have one or more sub-domain point at your website, such as `example.com` and `www.example.com`.
+With `webflow-aws` you can have one or more subdomain point at your website, such as `example.com` and `www.example.com`.
 
 In the `webflow-aws-config.yaml` file you will need to set the list of domains you would like to have your website pointing at. For example, you can have `example.com` and `www.example.com` enabled.
 
@@ -167,13 +211,7 @@ Go inside the folder created before that contains:
 + `webflow-aws-config.yaml` file
 + `.zip` file
 
-If it's the first time you are deploying it online, you have to call this command before:
-```bash
-webflow-aws setup
-```
-This command will create the Cloud Formation stack containing the support resources. 
-
-After this command, you can execute:
+To deploy your website, you have to execute this command:
 
 ```bash
 webflow-aws publish

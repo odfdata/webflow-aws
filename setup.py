@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
@@ -9,10 +9,10 @@ setup(
     description='Deploy your Webflow static website on AWS',
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
-    author='CreateInCloud',
-    author_email='fede.castelli21@gmail.com',
-    url='https://github.com/CreateInCloud/webflow-aws',
-    packages=find_packages(),
+    author='odfdata',
+    author_email='fc@oracleofde.fi',
+    url='https://github.com/odfdata/webflow-aws',
+    packages=find_namespace_packages(),
     python_requires='>=3.6',
     install_requires=requirements,
     include_package_data=True,

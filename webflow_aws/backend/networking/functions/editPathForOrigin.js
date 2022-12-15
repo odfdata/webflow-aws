@@ -1,6 +1,6 @@
 var path = require('path');
 
-exports.handler = async (event) => {
+exports.lambdaHandler = async (event) => {
 
   let uri = event.Records[0].cf.request.uri;
   let uriParts = uri.split("/");
