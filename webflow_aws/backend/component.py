@@ -1,9 +1,7 @@
 from typing import List
 
-from constructs import Construct
 from aws_cdk import (
     aws_cloudfront,
-    aws_iam,
     aws_lambda,
     aws_route53,
     aws_route53_targets,
@@ -12,6 +10,7 @@ from aws_cdk import (
     Fn,
     Stack
 )
+from constructs import Construct
 
 from webflow_aws.backend.compute.infrastructure import Compute
 from webflow_aws.backend.networking.infrastructure import Networking
@@ -30,7 +29,7 @@ class Backend(Stack):
         super().__init__(scope, construct_id, **kwargs)
         self.networking = Networking(self, "WebflowAwsNetworking", configuration=configuration)
         self.compute = Compute(
-            self, "WebflowAwsCompute", cloud_front_distribution=self.networking.cloud_front_distribution_www,
+            self, "WebflowAwsCompute", cloud_front_distribution=self.networking.main_cloud_front_distribution,
             configuration=configuration)
         self.storage = Storage(self, "WebflowAwsStorage", configuration=configuration)
         self.__add_s3_bucket_event_notification(
@@ -44,7 +43,7 @@ class Backend(Stack):
             route_53_hosted_zone=self.networking.route_53_hosted_zone,
             domain_name=configuration['domain_name'],
             alternative_domain_names=configuration['CNAMEs'],
-            cloud_front_distribution=self.networking.cloud_front_distribution_www)
+            cloud_front_distribution=self.networking.main_cloud_front_distribution)
 
     @staticmethod
     def __add_s3_bucket_event_notification(
@@ -90,8 +89,9 @@ class Backend(Stack):
             ) for domain_name in set(domain_names)
         ]
 
+    @staticmethod
     def __create_s3_source_bucket_policy(
-            self, s3_source_bucket: aws_s3.Bucket,
+            s3_source_bucket: aws_s3.Bucket,
             cloud_front_origin_access_identity: aws_cloudfront.OriginAccessIdentity
     ):
         """
@@ -100,19 +100,7 @@ class Backend(Stack):
         :param cloud_front_origin_access_identity: the cloudfront origin access identity you want to allow
         bucket access for
         """
-        aws_s3.CfnBucketPolicy(
-            self, 'S3SourceBucketPolicy',
-            bucket=s3_source_bucket.bucket_name,
-            policy_document=aws_iam.PolicyDocument(
-                statements=[
-                    aws_iam.PolicyStatement(
-                        effect=aws_iam.Effect.ALLOW,
-                        actions=['s3:GetObject'],
-                        sid='1',
-                        resources=[f'arn:aws:s3:::{s3_source_bucket.bucket_name}/*'],
-                        principals=[aws_iam.ArnPrincipal(
-                            f'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity '
-                            f'{cloud_front_origin_access_identity.origin_access_identity_id}')])]))
+        s3_source_bucket.grant_read(cloud_front_origin_access_identity)
 
     def __create_s3_trigger_lambda_invoke_permission(
             self, bucket_name: str, s3_trigger_lambda_function: aws_lambda.Function
@@ -123,7 +111,8 @@ class Backend(Stack):
         :param s3_trigger_lambda_function: the AWS lambda function the bucket needs to have the permission to invoke
         """
         aws_lambda.CfnPermission(
-            self, 'S3TriggerLambdaInvokePermission',
+            self,
+            'S3TriggerLambdaInvokePermission',
             function_name=s3_trigger_lambda_function.function_name,
             action='lambda:InvokeFunction',
             principal='s3.amazonaws.com',

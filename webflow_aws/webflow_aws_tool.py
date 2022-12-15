@@ -42,22 +42,6 @@ def create_config():
         config_maker.write_config()
 
 
-@cli.command(short_help='Delete the current deployed website')
-def delete():
-    proceed = click.confirm('Do you really want to delete the current deployed website?', False)
-    if not proceed:
-        return
-    configuration = get_configuration()
-    # cp app.py .
-    dest = shutil.copyfile(os.path.dirname(os.path.abspath(__file__)) + '/app.py', 'app.py')
-    with open('cdk.json', 'w') as outfile:
-        json.dump({'app': 'python3 app.py'}, outfile)
-    os.system(f'cdk destroy {configuration["stack_name"]} --profile {configuration["aws_profile_name"]} --require-approval never')
-    os.system(f'cdk destroy {configuration["stack_name"]} --profile {configuration["aws_profile_name"]} --require-approval never')
-    os.remove('cdk.json')
-    os.remove('app.py')
-
-
 @cli.command(short_help="Publish your website in production")
 @click.pass_context
 def publish(ctx):
@@ -83,7 +67,7 @@ def publish(ctx):
     # cp app.py .
     dest = shutil.copyfile(os.path.dirname(os.path.abspath(__file__)) + '/app.py', 'app.py')
     # exec cdk deploy
-    os.system(f'cdk deploy --profile {configuration["aws_profile_name"]} --require-approval never')
+    os.system(f'cdk deploy --profile {configuration["aws_profile_name"]} --require-approval never --strict')
     os.remove('cdk.json')
     os.remove('app.py')
     s3_resource = session.resource(service_name='s3')

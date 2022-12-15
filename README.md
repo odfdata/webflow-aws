@@ -1,7 +1,7 @@
 # webflow-aws
 
-| 🛑  | If you already deployed one website using the **v1** version of the tool, follow the [Upgrade](#upgrade) section before updating the tool version. |
-|-----|:---------------------------------------------------------------------------------------------------------------------------------------------------|
+| 🛑  | If you already deployed one website using the **v1** version of the tool, follow the [Migration from v1 to v2](#migration-from-v1-to-v2) section before updating the tool version. |
+|-----|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 
 An out-of-the box tool written in Python to deploy your [Webflow](https://webflow.com/) static website on AWS with a serverless architecture.
 
@@ -90,35 +90,45 @@ the available commands, and check if it's correctly installed, run the following
 webflow-aws --help
 ```
 
-### Upgrade
+### Migration from v1 to v2
 
-If you are already using the **v2** version of the tool, you can safely update the version running this command:
+If you used the **v1** version of the tool and you plan to migrate to the **v2**, remember this:
+
+| ⚠️  | Running the commands below will put your current website offline for couple of minutes. Plan to run the migration when you don't have traffic on your website. |
+|-----|:---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+
+To migrate from **v1** to **v2**, you have to delete the current deployed website from the AWS Console.
+Unfortunately is not possible to do it using our tool since there are resources that are running at edge and it takes
+time to complete the deletion on AWS side.
+
+These are the steps to delete your current website:
+
++ Open the configuration file you have locally (named *webflow-aws-config.yaml*), and search for the keywords
++ *stack_name* and *bucket_name* and copy the values.
++ Go to AWS Console and login in the account you have deployed your website.
++ Search for the AWS service named **S3** and open it.
++ Search for the Bucket with the same name copied before and click on the circle on the left of the name.
++ Click on the **Empty** button, and now you are ready to click on **Delete** button
++ Search for the AWS service named **CloudFormation** and open it.
++ Search for the stack deployed, click on it and click on **Delete**
++ After a couple of minutes, you will see the status stack equal to *DELETE_FAILED*
++ You can now click on **Delete** again, and check the square on the left of the resource name
++ Now you can click on **Delete stack**, and you are ready to upgrade your local tool.
+
+
+#### Update from v1 to v2
+
+Run the following command to update the tool: 
 
 ```bash
 pip3 install --upgrade webflow-aws
 ```
 
-If you already deployed a website using the **v1** version of the tool, you have to run this command before:
-
-```bash
-webflow-aws delete
-```
-
-| ⚠️  | Running the command above will put your current website offline. Plan to run the migration when you don't have traffic on your website. |
-|-----|:----------------------------------------------------------------------------------------------------------------------------------------|
-
-Now you can safely run:
-
-```bash
-pip3 install --upgrade webflow-aws
-```
-
-And publish again everything:
+Now you are ready to deploy your website using the new version running:
 
 ```bash
 webflow-aws publish
 ```
-
 
 ## Deploy your website
 
