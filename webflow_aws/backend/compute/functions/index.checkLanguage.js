@@ -3,7 +3,7 @@ var path = require('path');
 let VALID_LANGS = ["en"];
 let DEFAULT_LANG = VALID_LANGS[0];
 
-exports.handler = async (event) => {
+exports.lambdaHandler = async (event) => {
 
   let request = event.Records[0].cf.request;
   let headers = event.Records[0].cf.request.headers;

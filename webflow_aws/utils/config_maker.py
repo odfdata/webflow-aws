@@ -3,10 +3,9 @@ from typing import Optional, List
 import boto3
 import click
 import yaml
-
 from botocore.exceptions import ClientError
-from webflow_aws.global_variables import AWS_REGION_NAME, SETUP_STACK_NAME
-from webflow_aws.utils.base_utils import get_configuration, configuration_yaml_exists, get_setup_bucket_name
+
+from webflow_aws.utils.base_utils import get_configuration, configuration_yaml_exists
 
 
 class ConfigMaker(object):
@@ -35,8 +34,6 @@ class ConfigMaker(object):
         self.aws_profile_name: str = "default"
         self.bucket_name: str = ""
         self.stack_name: str = ""
-        self.setup_bucket_name: str = ""
-        self.setup_stack_name: str = ""
 
         self._config_loaded: bool = False
         self._load_config()
@@ -48,7 +45,6 @@ class ConfigMaker(object):
     def _load_config(self):
         """
         Loads the configuration (if present) and stores the values inside this class
-        :return:
         """
         if configuration_yaml_exists():
             config = get_configuration()
@@ -62,8 +58,6 @@ class ConfigMaker(object):
         self.bucket_name = config.get('bucket_name', "")
         self.stack_name = config.get('stack_name', "")
         self.aws_profile_name = config.get('aws_profile_name', "default")
-        self.setup_bucket_name = config.get('setup_bucket_name', "")
-        self.setup_stack_name = config.get('setup_stack_name', "webflow-aws-setup-stack")
 
     def _ask_domain_and_cnames(self):
         """
@@ -96,8 +90,7 @@ class ConfigMaker(object):
 
     def _ask_route53(self):
         """
-        Asks to user if he'd like to configure route53 or use custom DNS manager
-        :return:
+        Asks user if he'd like to configure route53 or use custom DNS manager
         """
         # ask if user would like to add route53 as manager
         # get domain names, if user would like to
@@ -174,14 +167,11 @@ class ConfigMaker(object):
             return False
         self.bucket_name = f"{self.domain_name}-{aws_account_id}"
         self.stack_name = self.domain_name.replace(".", "-")
-        self.setup_bucket_name = get_setup_bucket_name(AWS_REGION_NAME, self.aws_profile_name)
-        self.setup_stack_name = SETUP_STACK_NAME
         return True
 
     def write_config(self):
         """
         Dump the configuration to a file called webflow-aws-config.yaml
-        :return:
         """
         config_dict = {
             'CNAMEs': self.CNAMEs,
@@ -193,8 +183,6 @@ class ConfigMaker(object):
                } if self.route53_zone_added else {}),
             'stack_name': self.stack_name,
             'aws_profile_name': self.aws_profile_name,
-            'setup_bucket_name': self.setup_bucket_name,
-            'setup_stack_name': self.setup_stack_name
         }
         with open('webflow-aws-config.yaml', 'w') as outfile:
             yaml.dump(config_dict, outfile)
