@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='webflow-aws',
-    version='2.0.0',
+    version='2.0.1',
     description='Deploy your Webflow static website on AWS',
     long_description=open('README.md').read(),
     long_description_content_type="text/markdown",
