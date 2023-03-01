@@ -1,7 +1,7 @@
 import aws_cdk as cdk
 
-from webflow_aws.backend.component import Backend
-from webflow_aws.utils.base_utils import configuration_yaml_exists, get_configuration
+from backend.component import Backend
+from utils.base_utils import configuration_yaml_exists, get_configuration
 
 app = cdk.App()
 
